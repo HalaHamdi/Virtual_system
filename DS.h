@@ -1,6 +1,6 @@
 #include <stdio.h>
 #define MAX_SIZE 5000
-struct PCB *Object,value;
+// struct PCB *Object,value;
 
 struct ProcessPCB
 {
@@ -26,14 +26,14 @@ struct PCB
 // where should i decaler it???
 
  // Object.count=0;
-void Push(struct ProcessPCB p)
+void Push(struct ProcessPCB p,struct PCB *Object)
 {
    printf("ooh");
    
    Object->Procsess[Object->count++]=p;
     printf("done");
 }
-void POP()
+void POP(struct PCB *Object)
 {
     Object->Procsess[Object->count].arrivaltime=-1;
     Object->Procsess[Object->count].priority=-1;
@@ -45,7 +45,7 @@ void POP()
     Object->count--;
 
 }
-void Remove()
+void Remove(struct PCB *Object)
 {
     for(int i=0;i<Object->count;i++)
     {
@@ -60,7 +60,7 @@ void Remove()
     Object->count--;
 
 }
-void Removeone(int pid)
+void Removeone(int pid,struct PCB *Object)
 {
     int index=-1;
     for(int i=0;i<Object->count;i++)
@@ -76,11 +76,11 @@ void Removeone(int pid)
    {
          Object->Procsess[i]=Object->Procsess[i+1];
    }
-   POP();
+   POP(Object);
   }
 
 }
-void Insert(struct ProcessPCB p)
+void Insert(struct ProcessPCB p,struct PCB *Object)
 {
     Object->count ++;
      for(int i=0;i<Object->count;i++ )
@@ -89,7 +89,7 @@ void Insert(struct ProcessPCB p)
      }
      Object->Procsess[0]=p;
 }
-void Clear()
+void Clear(struct PCB *Object)
 {
 
 for(int i=0;i<Object->count;i++)
@@ -105,7 +105,7 @@ for(int i=0;i<Object->count;i++)
      Object->count=0;
 
 }
-int getProcess(int pid)
+int getProcess(int pid,struct PCB *Object)
 {
      for(int i=0;i<Object->count;i++)
      {
@@ -117,14 +117,14 @@ int getProcess(int pid)
      }
      return -1;
 }
-void Swap(int i,int j)
+void Swap(int i,int j,struct PCB *Object)
 {
    struct ProcessPCB P=Object->Procsess[i];
    Object->Procsess[i]=Object->Procsess[j];
    Object->Procsess[j]=P;
 
 }
-void sortrunnigtime()
+void sortrunnigtime(struct PCB *Object)
 {
     
    
@@ -138,12 +138,12 @@ void sortrunnigtime()
                        index=j;
                    }
           }
-          Swap(index,i);
+          Swap(index,i,Object);
     }
     
     
 }
-void PrintPCB()
+void PrintPCB(struct PCB *Object)
 {
     for(int i=0;i<Object->count;i++)
     {
