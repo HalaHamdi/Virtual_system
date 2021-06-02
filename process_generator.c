@@ -1,6 +1,9 @@
 #include "headers.h"
 #include<string.h>
 
+
+int msgq_id;
+
 struct processData
 {
     int arrivaltime; //total processes number for first item send to scheduler
@@ -27,7 +30,6 @@ int main(int argc, char *argv[])
     int quantum=-1;
     key_t schedulerKey=1234;
     int pid[2],stat_loc;
-    int msgq_id;
     struct processData Initiator;
    
     strcpy(fileName,argv[1]);
@@ -54,9 +56,9 @@ int main(int argc, char *argv[])
 
 
     // Create a data structure for processes and provide it with its parameters.
-    key_t scheduler=ftok("schedulerKey",'S');
-    msgq_id=msgget(scheduler,0666|IPC_CREAT);
-   printf("msgq_id in pgenerator %d \n",msgq_id);
+    
+    msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
+   printf("msgq_id %d \n",msgq_id);
 
     if(msgq_id==-1){
         printf("error in creating msgQueue \n");
@@ -69,7 +71,6 @@ int main(int argc, char *argv[])
     Initiator.id=AlgorithmNmber;         //the AlgorithmNmber will be sent in the id  
     Initiator.priority=quantum;         //the quantum will be sent in the priority BUT NEEDS  TO BE FLOAT  
     msgsnd(msgq_id,&Initiator,sizeof(&Initiator),!IPC_NOWAIT);
-    printf("sent Initiator \n");
 
     //send each process when its time comes
     int counter=0;
@@ -83,7 +84,9 @@ int main(int argc, char *argv[])
         }
     }
     
-
+    //will wait till the scheduler finishes
+    wait(&stat_loc);
+    
     
     // 7. Clear clock resources
    destroyClk(true);
@@ -91,7 +94,7 @@ int main(int argc, char *argv[])
 
 void clearResources(int signum)
 {
-    //TODO Clears all resources in case of interruption
+    msgctl(msgq_id,IPC_RMID,(struct msqid_ds*)0);
     killpg(getpgrp(),SIGKILL);
     signal(SIGINT, clearResources);
 
@@ -101,7 +104,7 @@ void getChildren(int pid[]){
 
     if(pid[0]==-1){perror("error in forking clock");}
     else if (pid[0]==0){
-        execl("./clk.o","clk.o",NULL); 
+        execl("./clk.out","clk.out",NULL); 
         // need to ensure that it is in clk.o format 
         //need to generalize the bin directory
     }
@@ -111,7 +114,7 @@ void getChildren(int pid[]){
     if(pid[1]==-1){perror("error in forking scheduler");}
     else if (pid[1]==0){
 
-        execl("./scheduler.o","scheduler.o",NULL); 
+        execl("./scheduler.out","scheduler.out",NULL); 
 
     }
 }
