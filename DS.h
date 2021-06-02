@@ -1,6 +1,7 @@
-
+#include <stdio.h>
 #define MAX_SIZE 5000
-struct PCB *Object;
+struct PCB *Object,value;
+
 struct ProcessPCB
 {
 
@@ -17,19 +18,22 @@ struct PCB
 {
    struct ProcessPCB Procsess[MAX_SIZE];
    int count;
+  
 
    
 };
+
 // where should i decaler it???
 
  // Object.count=0;
 void Push(struct ProcessPCB p)
 {
-   
+   printf("ooh");
    
    Object->Procsess[Object->count++]=p;
+    printf("done");
 }
-void POP(struct ProcessPCB p)
+void POP()
 {
     Object->Procsess[Object->count].arrivaltime=-1;
     Object->Procsess[Object->count].priority=-1;
@@ -41,7 +45,7 @@ void POP(struct ProcessPCB p)
     Object->count--;
 
 }
-void Remove(struct ProcessPCB p)
+void Remove()
 {
     for(int i=0;i<Object->count;i++)
     {
@@ -56,6 +60,26 @@ void Remove(struct ProcessPCB p)
     Object->count--;
 
 }
+void Removeone(int pid)
+{
+    int index=-1;
+    for(int i=0;i<Object->count;i++)
+    {
+        if(Object->Procsess[i].pid==pid)
+        {
+            index=i;
+              break;
+        }
+    }
+    if(index!=-1)
+  { for(int i=index;i<Object->count;i++)
+   {
+         Object->Procsess[i]=Object->Procsess[i+1];
+   }
+   POP();
+  }
+
+}
 void Insert(struct ProcessPCB p)
 {
     Object->count ++;
@@ -65,7 +89,7 @@ void Insert(struct ProcessPCB p)
      }
      Object->Procsess[0]=p;
 }
-void Clear(struct ProcessPCB p)
+void Clear()
 {
 
 for(int i=0;i<Object->count;i++)
@@ -119,5 +143,11 @@ void sortrunnigtime()
     
     
 }
-
+void PrintPCB()
+{
+    for(int i=0;i<Object->count;i++)
+    {
+        printf("ahhhh %d %d",Object->Procsess[i].arrivaltime,Object->Procsess[i].priority);
+    }
+}
 
