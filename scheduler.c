@@ -1,5 +1,5 @@
 #include "headers.h"
-
+#include"DS.h"
 struct processData
 {
     int arrivaltime;
@@ -7,6 +7,8 @@ struct processData
     int runningtime;
     int id;
 };
+
+int shmid;
 int main(int argc, char *argv[])
 {
     initClk();
@@ -37,3 +39,31 @@ int main(int argc, char *argv[])
 
     destroyClk(true);
 }
+void CreatePCB()
+{   key_t key; 
+    key=ftok("PCB",'P');
+   int shmid =  shmget(key, 4096, IPC_CREAT | 0644);
+   if(shmid==-1)
+   {
+       printf("Error ");
+       exit(-1);
+   
+   }
+   
+
+}
+void attach_PCB()
+{
+     void *shmaddr = shmat(shmid, (void *)0, 0);
+    
+
+    // not sure
+             Object = (struct PCB*) shmaddr;
+             Object->count=0;
+             shmaddr=Object;
+   
+    
+     
+}
+  
+
