@@ -13,73 +13,65 @@ struct processData
 
 void clearResources(int);
 void getChildren(int arr[]);
+int getTotalLines(char fileName[], FILE *fp);
+void storeProcessData(struct processData processArray[],FILE *fp,int Totallines);
+
 int main(int argc, char *argv[])
 {
     signal(SIGINT, clearResources);
 
     // * taking terminal parameters 
+    //  Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
     char fileName[50];  
-    strcpy(fileName,argv[1]);
-    int AlgorithmNmber=atoi(argv[3]);
+    int AlgorithmNmber;
     int quantum=-1;
+    key_t schedulerKey=1234;
+    int pid[2],stat_loc;
+    int msgq_id;
+    struct processData Initiator;
+   
+    strcpy(fileName,argv[1]);
+    AlgorithmNmber=atoi(argv[3]);
     if(argc>4){
         quantum=atoi(argv[5]);
     }
 
-    // TODO Initialization
-    key_t schedulerKey=1234;
-    // 1. Read the input files.
+   
+    //  Read the input files.
     FILE *fp=fopen(fileName,"r");
-    if(fp==NULL){ printf("File \"%s\" does not exist!!!\n",fileName); exit(-1);}
-    char ch;
-    int Totallines=0;
-    //getting number of processes made in text file.
-    //by counting the number of lines
-    while((ch=fgetc(fp))!=EOF){
-        if(ch=='\n'){Totallines++;}
-    }
+    int Totallines=getTotalLines(fileName,fp);
     struct processData processArray[Totallines-1];
-    //reset the pointer to the begining of file
-    fseek(fp, 0, SEEK_SET);
-    char word[20];
-    //skip the first line 
-    for(int i=0;i<4;i++){fscanf(fp,"%s",word);}
-    //store the 
-    for(int i=0;i<Totallines-1;i++){
-        struct processData p;
-        fscanf(fp,"%d",&p.id);
-        fscanf(fp,"%d",&p.arrivaltime);
-        fscanf(fp,"%d",&p.runningtime);
-        fscanf(fp,"%d",&p.priority);
-        processArray[i]=p;
-    }
-    fclose(fp);
-    // 2. Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
+    storeProcessData(processArray,fp,Totallines);
+
 
     // 3. Initiate and create the scheduler and clock processes.
-    int pid[2],stat_loc;
+   
     getChildren(pid); //sometimes after clck terminates still running
     printf("clk id= %d ,scheduler id=%d \n",pid[0],pid[1]);
-    // 4. Use this function after creating the clock process to initialize clock.
+
+    //  initialize clock.
     initClk();
-    // To get time use this function. 
-    int x = getClk();
-    printf("Current Time is %d\n", x);
-    // TODO Generation Main Loop
-    // 5. Create a data structure for processes and provide it with its parameters.
 
-   int msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
-      printf("between msgqueue  \n");
 
-   if(msgq_id==-1){printf("error in creating msgQueue \n"); exit(-1);}
-          printf("after msgqueue  \n");
+    // Create a data structure for processes and provide it with its parameters.
+    key_t scheduler=ftok("schedulerKey",'S');
+    msgq_id=msgget(scheduler,0666|IPC_CREAT);
+   printf("msgq_id in pgenerator %d \n",msgq_id);
 
-    // 6. Send the information to the scheduler at the appropriate time.
-   struct processData Initiator;
-    Initiator.arrivaltime=Totallines-1; 
-    Initiator.id=AlgorithmNmber;
-    Initiator.priority=quantum;
+    if(msgq_id==-1){
+        printf("error in creating msgQueue \n");
+         exit(-1);}
+
+
+    // 6. Send the Initiator which contains the number of processes , Algorithm number adn any extra parameter (e.g :quantum).
+
+    Initiator.arrivaltime=Totallines-1;  //the TotalProcesses will be sent in the arrivaltime  
+    Initiator.id=AlgorithmNmber;         //the AlgorithmNmber will be sent in the id  
+    Initiator.priority=quantum;         //the quantum will be sent in the priority BUT NEEDS  TO BE FLOAT  
     msgsnd(msgq_id,&Initiator,sizeof(&Initiator),!IPC_NOWAIT);
+    printf("sent Initiator \n");
+
+    //send each process when its time comes
     int counter=0;
     while(true){
         
@@ -106,19 +98,49 @@ void clearResources(int signum)
 }
 void getChildren(int pid[]){
    pid[0]=fork();
+
     if(pid[0]==-1){perror("error in forking clock");}
     else if (pid[0]==0){
-        printf("clock pid %d \n",getpid());
         execl("./clk.o","clk.o",NULL); 
         // need to ensure that it is in clk.o format 
         //need to generalize the bin directory
     }
 
     pid[1]=fork();
+   
     if(pid[1]==-1){perror("error in forking scheduler");}
     else if (pid[1]==0){
-        printf("scheduler pid  %d \n",getpid());
+
         execl("./scheduler.o","scheduler.o",NULL); 
-        
+
     }
+}
+
+int getTotalLines(char fileName[],FILE *fp){
+    
+    if(fp==NULL){ printf("File \"%s\" does not exist!!!\n",fileName); exit(-1);}
+    char ch;
+    int Totallines=0;
+    //getting number of processes made in text file.
+    //by counting the number of lines
+    while((ch=fgetc(fp))!=EOF){
+        if(ch=='\n'){Totallines++;}
+    }
+    return Totallines;
+}
+void storeProcessData(struct processData processArray[],FILE *fp,int Totallines){
+    fseek(fp, 0, SEEK_SET);
+    char word[20];
+    //skip the first line 
+    for(int i=0;i<4;i++){fscanf(fp,"%s",word);}
+    //store the 
+    for(int i=0;i<Totallines-1;i++){
+        struct processData p;
+        fscanf(fp,"%d",&p.id);
+        fscanf(fp,"%d",&p.arrivaltime);
+        fscanf(fp,"%d",&p.runningtime);
+        fscanf(fp,"%d",&p.priority);
+        processArray[i]=p;
+    }
+    fclose(fp);
 }
