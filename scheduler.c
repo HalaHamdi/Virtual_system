@@ -1,6 +1,49 @@
 #include "headers.h"
- #include"DS.h"
- #include"string.h"
+#include"DS.h"
+#include"string.h"
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
+
+union Semun
+{
+    int val;               /* value for SETVAL */
+    struct semid_ds *buf;  /* buffer for IPC_STAT & IPC_SET */
+    ushort *array;         /* array for GETALL & SETALL */
+    struct seminfo *__buf; /* buffer for IPC_INFO */
+    void *__pad;
+};
+
+void down(int sem)
+{
+    struct sembuf p_op;
+
+    p_op.sem_num = 0;
+    p_op.sem_op = -1;
+    p_op.sem_flg = !IPC_NOWAIT;
+
+    if (semop(sem, &p_op, 1) == -1)
+    {
+        perror("Error in down()");
+        exit(-1);
+    }
+}
+
+void up(int sem)
+{
+    struct sembuf v_op;
+
+    v_op.sem_num = 0;
+    v_op.sem_op = 1;
+    v_op.sem_flg = !IPC_NOWAIT;
+
+    if (semop(sem, &v_op, 1) == -1)
+    {
+        perror("Error in up()");
+        exit(-1);
+    }
+}
+
 
 struct processData
 {
@@ -12,6 +55,7 @@ struct processData
     //int id;
 };
 int shmid;
+void sendtoprocess(int remTime);
 int main(int argc, char *argv[])
 {
     initClk();
@@ -45,7 +89,7 @@ int main(int argc, char *argv[])
     char State[7]="waiting";
     int runPro=0;
     int FinshtimePro=-1;
-    int pid;
+    int pid=-1;
     while(true){
 
     if(prvtime!=getClk()){
@@ -75,14 +119,17 @@ int main(int argc, char *argv[])
         }
         //printf("Raghad \n");
         if(table.count!=0 && runPro==0){
+
         sortrunnigtime(&table);
         FinshtimePro=prvtime+table.Procsess[0].runningtime;
 
-       /* pid=fork();
+        
+        pid=fork();
         if(pid==-1){perror("error in forking clock");}
         else if (pid==0){                                 //child
-            execl("./processes.out","processes.out",NULL); }*/
-
+            execl("./process.out","process.out",NULL);
+             }
+        sendtoprocess(table.Procsess[0].runningtime);     
         char runing[7]="started";
         printf("process started %d \n",table.Procsess[0].id);  
         strcpy(table.Procsess[0].state,runing);
@@ -101,11 +148,53 @@ int main(int argc, char *argv[])
   //  for(int i =0;i<TotalProcess;i++)
   //     printf(" id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[i].processinfo[0],processArray[i].processinfo[1],processArray[i].processinfo[2],processArray[i].processinfo[3]);
 
-    PrintPCB(&table);
+    //PrintPCB(&table);
     destroyClk(true);
 }
 
+void sendtoprocess(int remTime){
+int shmid, pid;
+    //memo = ftok("Up", 'r');
+    //sempho1 = ftok("sem1", 'a');
+     key_t memo=7893;
+     key_t sempho1=7894;
 
+    shmid = shmget(memo, 4096, IPC_CREAT | 0644);
+
+    if (shmid == -1)
+    {
+        perror("Error in create");
+        exit(-1);
+    }
+    void *shmaddr = shmat(shmid, (void *)0, 0);
+   /* if (shmaddr == -1)
+    {
+        perror("Error in attach in Clint");
+        exit(-1);
+    }*/
+    union Semun semun;
+
+    int sem1 = semget(sempho1, 1, 0666 | IPC_CREAT);
+
+    if (sem1 == -1)
+    {
+        perror("Error in create sem");
+        exit(-1);
+    }
+
+    semun.val = 0; /* initial value of the semaphore, Binary semaphore */
+    if (semctl(sem1, 0, SETVAL, semun) == -1)
+    {
+        perror("Error in semctl");
+        exit(-1);
+    }
+    char text[10];
+   sprintf(text, "%d", remTime);  
+   strcpy((char *) shmaddr,text);
+   //memset(shmaddr,remTime,1);
+   up(sem1);
+
+}
 
 // #include "headers.h"
 // #include"DS.h"
