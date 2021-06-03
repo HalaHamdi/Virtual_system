@@ -88,13 +88,22 @@ int main(int argc, char *argv[])
         
         if(getClk()>=processArray[counter].processinfo[1]){
         printf("current time %d \n",getClk());
-        msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),!IPC_NOWAIT);
+        int send_val=msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),IPC_NOWAIT);
+        if(send_val == -1)
+            perror("Errror in send");
         counter++;
         if(counter==Totallines){break;}
         }
     }
-    
-    //will wait till the scheduler finishes
+
+  /*  printf("ftimeeeeeeee %d \n",processArray[Totallines-1].processinfo[1]+processArray[Totallines-1].processinfo[2]);
+    while(true){
+        printf("current time %d \n",getClk());
+        if(processArray[Totallines-1].processinfo[1]+processArray[Totallines-1].processinfo[2]<getClk()){
+            break;
+        }
+    }*/
+    //will wait till the scheduler finishes  sid = waitpid(pid[1],&stat_loc,0); it is better 
     wait(&stat_loc);
     
     

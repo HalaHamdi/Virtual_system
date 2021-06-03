@@ -1,5 +1,6 @@
 #include "headers.h"
  #include"DS.h"
+ #include"string.h"
 
 struct processData
 {
@@ -14,6 +15,7 @@ int shmid;
 int main(int argc, char *argv[])
 {
     initClk();
+    int prvtime=getClk();
     printf("Schadular id= %d  \n",getpid());
     key_t schedulerKey=1234;
     int msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
@@ -27,20 +29,51 @@ int main(int argc, char *argv[])
             perror("Errror in rec");
 
     int TotalProcess=p.processinfo[0];
-      ("num of process from Schudler %d \n",TotalProcess);
+      printf("num of process from Schudler %d \n",TotalProcess);
     struct processData  processArray[TotalProcess];
 
-    for(int counter=0 ;counter<TotalProcess;counter++ ){
+  /*  for(int counter=0 ;counter<TotalProcess;counter++ ){
      msgrcv(msgq_id,&p,sizeof(p.processinfo),0,!IPC_NOWAIT);
      processArray[counter]=p;
 
+    }*/
+    
+    struct PCB table;
+    struct ProcessPCB Procsess;
+    int procCount=0;
+    char State[7]="waiting";
+    while(true){
+
+    if(prvtime!=getClk()){
+     prvtime=getClk();
+     rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
+     if(rec_val == -1)
+      {      perror("Errror in rec"); }
+      else{
+        printf("process ID %d \n",p.processinfo[0]);
+        Procsess.id=p.processinfo[0];
+        Procsess.arrivaltime=p.processinfo[1];
+        Procsess.runningtime=p.processinfo[2];
+        Procsess.priority=p.processinfo[3];
+        Procsess.remanningtime=p.processinfo[2];
+        strcpy(Procsess.state,State);
+        Push(Procsess,&table);
+        sortrunnigtime(&table);
+        procCount++;
+      }    
+        printf("Raghad \n");
     }
 
-    for(int i =0;i<TotalProcess;i++)
-     printf(" id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[i].processinfo[0],processArray[i].processinfo[1],processArray[i].processinfo[2],processArray[i].processinfo[3]);
+    if(procCount==TotalProcess){break;}
+    }
 
-    
+  //  if(table.count>0){
 
+  //  }
+  //  for(int i =0;i<TotalProcess;i++)
+  //     printf(" id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[i].processinfo[0],processArray[i].processinfo[1],processArray[i].processinfo[2],processArray[i].processinfo[3]);
+
+    PrintPCB(&table);
     destroyClk(true);
 }
 
