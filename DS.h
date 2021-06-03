@@ -28,10 +28,10 @@ struct PCB
  // Object.count=0;
 void Push(struct ProcessPCB p,struct PCB *Object)
 {
-   printf("ooh");
+   //printf("ooh");
    
    Object->Procsess[Object->count++]=p;
-    printf("done");
+    //printf("done");
 }
 void POP(struct PCB *Object)
 {
@@ -148,7 +148,7 @@ void PrintPCB(struct PCB *Object)
 {
     for(int i=0;i<Object->count;i++)
     {
-        printf("ahhhh %d %d",Object->Procsess[i].arrivaltime,Object->Procsess[i].priority);
+        printf("ahhhh %d %d",Object->Procsess[i].arrivaltime,Object->Procsess[i].runningtime);
     }
 }
 

@@ -87,12 +87,12 @@ int main(int argc, char *argv[])
     while(true){
         
         if(getClk()>=processArray[counter].processinfo[1]){
-        printf("current time %d \n",getClk());
-        int send_val=msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),IPC_NOWAIT);
+        printf("current time from generator %d \n",getClk());
+        int send_val=msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),!IPC_NOWAIT);
         if(send_val == -1)
             perror("Errror in send");
         counter++;
-        if(counter==Totallines){break;}
+        if(counter==Totallines-1){break;}
         }
     }
 

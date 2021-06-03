@@ -40,15 +40,21 @@ int main(int argc, char *argv[])
     
     struct PCB table;
     struct ProcessPCB Procsess;
+    table.count=0;
     int procCount=0;
     char State[7]="waiting";
+    int runPro=0;
+    int FinshtimePro=-1;
+    int pid;
     while(true){
 
     if(prvtime!=getClk()){
      prvtime=getClk();
+     printf("current time %d \n",prvtime);
      rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
      if(rec_val == -1)
-      {      perror("Errror in rec"); }
+      {     // perror("Errror in rec"); 
+      }
       else{
         printf("process ID %d \n",p.processinfo[0]);
         Procsess.id=p.processinfo[0];
@@ -58,13 +64,35 @@ int main(int argc, char *argv[])
         Procsess.remanningtime=p.processinfo[2];
         strcpy(Procsess.state,State);
         Push(Procsess,&table);
-        sortrunnigtime(&table);
         procCount++;
       }    
-        printf("Raghad \n");
+        if(prvtime==FinshtimePro){
+        char finished[8]="finished";  
+        strcpy(table.Procsess[0].state,finished);
+        printf("process Finished %d \n",table.Procsess[0].id);
+        Remove(&table);
+        runPro=0;
+        }
+        //printf("Raghad \n");
+        if(table.count!=0 && runPro==0){
+        sortrunnigtime(&table);
+        FinshtimePro=prvtime+table.Procsess[0].runningtime;
+
+       /* pid=fork();
+        if(pid==-1){perror("error in forking clock");}
+        else if (pid==0){                                 //child
+            execl("./processes.out","processes.out",NULL); }*/
+
+        char runing[7]="started";
+        printf("process started %d \n",table.Procsess[0].id);  
+        strcpy(table.Procsess[0].state,runing);
+        runPro=1;
+        }
+        
+
     }
 
-    if(procCount==TotalProcess){break;}
+    if(procCount==TotalProcess&& table.count==0){break;}
     }
 
   //  if(table.count>0){
@@ -159,27 +187,27 @@ void attach_PCB()
      printf("non problem \n");
     
 
-    struct PCB value;
-    struct PCB  *Object=&value;
-      printf("non problem1 \n");
-              Object = (struct PCB*) shmaddr;
-                printf("non problem2 \n");
-                value.count=0;
-                Object=&value;
+    // struct PCB value;
+    // struct PCB  *Object=&value;
+    //   printf("non problem1 \n");
+    //           Object = (struct PCB*) shmaddr;
+    //             printf("non problem2 \n");
+    //             value.count=0;
+    //             Object=&value;
              
-              printf("non problem3 \n");
-             shmaddr=Object;
-               printf("non problem4\n");
+    //           printf("non problem3 \n");
+    //          shmaddr=Object;
+    //            printf("non problem4\n");
                
-              printf("ahhhhhhhhhhhhhhhh %d \n",Object->count);
-         printf("ahhhhhh  %d \n",( (struct PCB*) shmaddr)->count);
+    //           printf("ahhhhhhhhhhhhhhhh %d \n",Object->count);
+    //      printf("ahhhhhh  %d \n",( (struct PCB*) shmaddr)->count);
        
-         struct ProcessPCB mp;
-         mp.arrivaltime=1000;
-         mp.id=5;
-         mp.priority=10;
-         Insert(mp,((struct PCB*) shmaddr));
-         printf("jjjjj %d %d %d", ( (struct PCB*) shmaddr)->Procsess[0].arrivaltime, ( (struct PCB*) shmaddr)->Procsess[0].id, ( (struct PCB*) shmaddr)->Procsess[0].priority);
+    //      struct ProcessPCB mp;
+    //      mp.arrivaltime=1000;
+    //      mp.id=5;
+    //      mp.priority=10;
+    //      Insert(mp,((struct PCB*) shmaddr));
+    //      printf("jjjjj %d %d %d", ( (struct PCB*) shmaddr)->Procsess[0].arrivaltime, ( (struct PCB*) shmaddr)->Procsess[0].id, ( (struct PCB*) shmaddr)->Procsess[0].priority);
     
      
 }
