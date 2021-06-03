@@ -3,35 +3,43 @@
 
 struct processData
 {
-    int arrivaltime;
-    int priority;
-    int runningtime;
-    int id;
+    long mtype;
+    int processinfo[4];
+    //int arrivaltime;
+    //int priority;
+    //int runningtime;
+    //int id;
 };
 int shmid;
 int main(int argc, char *argv[])
 {
     initClk();
+    printf("Schadular id= %d  \n",getpid());
     key_t schedulerKey=1234;
     int msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
+     printf("msgq_id from Scudular %d \n",msgq_id);
 
    if(msgq_id==-1){printf("error in creating msgQueue \n"); exit(-1);}
 
     struct processData p;
-    msgrcv(msgq_id,&p,sizeof(&p),0,!IPC_NOWAIT);
-    int TotalProcess=p.arrivaltime;
+    int rec_val=msgrcv(msgq_id,&p,sizeof(p.processinfo),0,!IPC_NOWAIT);
+    if(rec_val == -1)
+            perror("Errror in rec");
+
+    int TotalProcess=p.processinfo[0];
+      ("num of process from Schudler %d \n",TotalProcess);
     struct processData  processArray[TotalProcess];
 
     for(int counter=0 ;counter<TotalProcess;counter++ ){
-     msgrcv(msgq_id,&p,sizeof(&p),0,!IPC_NOWAIT);
+     msgrcv(msgq_id,&p,sizeof(p.processinfo),0,!IPC_NOWAIT);
      processArray[counter]=p;
 
     }
 
     for(int i =0;i<TotalProcess;i++)
-     printf(" id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[i].id,processArray[i].arrivaltime,processArray[i].runningtime,processArray[i].priority);
+     printf(" id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[i].processinfo[0],processArray[i].processinfo[1],processArray[i].processinfo[2],processArray[i].processinfo[3]);
 
-
+    
 
     destroyClk(true);
 }

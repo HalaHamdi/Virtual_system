@@ -6,10 +6,12 @@ int msgq_id;
 
 struct processData
 {
-    int arrivaltime; //total processes number for first item send to scheduler
-    int priority;    //quantum is send if found
-    int runningtime;
-    int id;      //id of the algorithm to execute
+    long mtype;
+    int processinfo[4];
+    //int arrivaltime; //total processes number for first item send to scheduler
+    //int priority;    //quantum is send if found
+    //int runningtime;
+    //int id;      //id of the algorithm to execute
 };
 
 
@@ -21,8 +23,9 @@ void storeProcessData(struct processData processArray[],FILE *fp,int Totallines)
 
 int main(int argc, char *argv[])
 {
-    signal(SIGINT, clearResources);
 
+    signal(SIGINT, clearResources);
+     printf("Process generator id= %d  \n",getpid());
     // * taking terminal parameters 
     //  Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
     char fileName[50];  
@@ -47,7 +50,7 @@ int main(int argc, char *argv[])
 
 
     // 3. Initiate and create the scheduler and clock processes.
-   
+    //destroyClk(true);
     getChildren(pid); //sometimes after clck terminates still running
     printf("clk id= %d ,scheduler id=%d \n",pid[0],pid[1]);
 
@@ -58,7 +61,7 @@ int main(int argc, char *argv[])
     // Create a data structure for processes and provide it with its parameters.
     
     msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
-   printf("msgq_id %d \n",msgq_id);
+   printf("msgq_id from generator %d \n",msgq_id);
 
     if(msgq_id==-1){
         printf("error in creating msgQueue \n");
@@ -66,19 +69,26 @@ int main(int argc, char *argv[])
 
 
     // 6. Send the Initiator which contains the number of processes , Algorithm number adn any extra parameter (e.g :quantum).
+    printf("num of process from generator %d \n",Totallines-1);
+    //Initiator.arrivaltime=Totallines-1; //the TotalProcesses will be sent in the arrivaltime  
+    //Initiator.id=AlgorithmNmber;         //the AlgorithmNmber will be sent in the id  
+    //Initiator.priority=quantum;         //the quantum will be sent in the priority BUT NEEDS  TO BE FLOAT  
+    Initiator.processinfo[0]=Totallines-1;
+    Initiator.processinfo[1]=AlgorithmNmber;
+    Initiator.processinfo[2]=quantum;
+    Initiator.processinfo[3]=-1;
+    Initiator.mtype=1;
+    int send_val=msgsnd(msgq_id,&Initiator,sizeof(Initiator.processinfo),!IPC_NOWAIT);
 
-    Initiator.arrivaltime=Totallines-1;  //the TotalProcesses will be sent in the arrivaltime  
-    Initiator.id=AlgorithmNmber;         //the AlgorithmNmber will be sent in the id  
-    Initiator.priority=quantum;         //the quantum will be sent in the priority BUT NEEDS  TO BE FLOAT  
-    msgsnd(msgq_id,&Initiator,sizeof(&Initiator),!IPC_NOWAIT);
-
+     if(send_val == -1)
+            perror("Errror in send");
     //send each process when its time comes
-    int counter=0;
+   int counter=0;
     while(true){
         
-        if(getClk()>=processArray[counter].arrivaltime){
+        if(getClk()>=processArray[counter].processinfo[1]){
         printf("current time %d \n",getClk());
-        msgsnd(msgq_id,&processArray[counter],sizeof(&processArray[counter]),!IPC_NOWAIT);
+        msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),!IPC_NOWAIT);
         counter++;
         if(counter==Totallines){break;}
         }
@@ -139,10 +149,10 @@ void storeProcessData(struct processData processArray[],FILE *fp,int Totallines)
     //store the 
     for(int i=0;i<Totallines-1;i++){
         struct processData p;
-        fscanf(fp,"%d",&p.id);
-        fscanf(fp,"%d",&p.arrivaltime);
-        fscanf(fp,"%d",&p.runningtime);
-        fscanf(fp,"%d",&p.priority);
+        fscanf(fp,"%d",&p.processinfo[0]);
+        fscanf(fp,"%d",&p.processinfo[1]);
+        fscanf(fp,"%d",&p.processinfo[2]);
+        fscanf(fp,"%d",&p.processinfo[3]);
         processArray[i]=p;
     }
     fclose(fp);
