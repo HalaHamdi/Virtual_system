@@ -83,9 +83,10 @@ void Removeone(int pid,struct PCB *Object)
 void Insert(struct ProcessPCB p,struct PCB *Object)
 {
     Object->count ++;
+    struct PCB *newObject=Object;
      for(int i=0;i<Object->count;i++ )
      {
-         Object->Procsess[i+1]=Object->Procsess[i];
+         Object->Procsess[i+1]=newObject->Procsess[i];
      }
      Object->Procsess[0]=p;
 }
