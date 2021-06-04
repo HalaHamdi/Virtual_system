@@ -4,6 +4,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
+#include <sys/wait.h>
+#include <signal.h>
 
 union Semun
 {
@@ -14,20 +16,6 @@ union Semun
     void *__pad;
 };
 
-void down(int sem)
-{
-    struct sembuf p_op;
-
-    p_op.sem_num = 0;
-    p_op.sem_op = -1;
-    p_op.sem_flg = !IPC_NOWAIT;
-
-    if (semop(sem, &p_op, 1) == -1)
-    {
-        perror("Error in down()");
-        exit(-1);
-    }
-}
 
 void up(int sem)
 {
@@ -42,6 +30,10 @@ void up(int sem)
         perror("Error in up()");
         exit(-1);
     }
+
+    union Semun semun;
+    int VAL=semctl(sem, 0, GETVAL, semun);
+    printf("semval after UUUP %d \n",VAL);
 }
 
 
@@ -54,11 +46,27 @@ struct processData
     //int runningtime;
     //int id;
 };
+struct PCB table;
+int runPro=0;
+void handler(int signum)
+{
+ 
+    //printf("My Pid is [%d], and i have got signal #%d\n",getpid(), signum);
+    char finished[8]="finished";  
+    strcpy(table.Procsess[0].state,finished);
+    printf("process Finished %d \n",table.Procsess[0].id);
+    Remove(&table);
+    runPro=0;
+  
+  /* signal( SIGUSR1, handler); */
+}
+
 int shmid;
 void sendtoprocess(int remTime);
 int main(int argc, char *argv[])
 {
     initClk();
+    signal (SIGUSR1, handler);
     int prvtime=getClk();
     printf("Schadular id= %d  \n",getpid());
     key_t schedulerKey=1234;
@@ -82,13 +90,12 @@ int main(int argc, char *argv[])
 
     }*/
     
-    struct PCB table;
+    
     struct ProcessPCB Procsess;
     table.count=0;
     int procCount=0;
     char State[7]="waiting";
-    int runPro=0;
-    int FinshtimePro=-1;
+    //int FinshtimePro=-1;
     int pid=-1;
     while(true){
 
@@ -110,26 +117,25 @@ int main(int argc, char *argv[])
         Push(Procsess,&table);
         procCount++;
       }    
-        if(prvtime==FinshtimePro){
+        /*if(prvtime==FinshtimePro){
         char finished[8]="finished";  
         strcpy(table.Procsess[0].state,finished);
         printf("process Finished %d \n",table.Procsess[0].id);
         Remove(&table);
         runPro=0;
-        }
+        }*/
         //printf("Raghad \n");
         if(table.count!=0 && runPro==0){
-
         sortrunnigtime(&table);
-        FinshtimePro=prvtime+table.Procsess[0].runningtime;
-
+        //FinshtimePro=prvtime+table.Procsess[0].runningtime;
+        sendtoprocess(table.Procsess[0].runningtime);   
         
         pid=fork();
         if(pid==-1){perror("error in forking clock");}
         else if (pid==0){                                 //child
             execl("./process.out","process.out",NULL);
              }
-        sendtoprocess(table.Procsess[0].runningtime);     
+          
         char runing[7]="started";
         printf("process started %d \n",table.Procsess[0].id);  
         strcpy(table.Procsess[0].state,runing);
@@ -142,6 +148,11 @@ int main(int argc, char *argv[])
     if(procCount==TotalProcess&& table.count==0){break;}
     }
 
+    // while (true)
+    // {
+         /* code */
+    // }
+     
   //  if(table.count>0){
 
   //  }
@@ -153,11 +164,11 @@ int main(int argc, char *argv[])
 }
 
 void sendtoprocess(int remTime){
-int shmid, pid;
+    int shmid, pid,sempho1;
     //memo = ftok("Up", 'r');
-    //sempho1 = ftok("sem1", 'a');
+     sempho1 = ftok("sem1", 'a');
      key_t memo=7893;
-     key_t sempho1=7894;
+     //key_t sempho1=7894;
 
     shmid = shmget(memo, 4096, IPC_CREAT | 0644);
 
@@ -192,7 +203,11 @@ int shmid, pid;
    sprintf(text, "%d", remTime);  
    strcpy((char *) shmaddr,text);
    //memset(shmaddr,remTime,1);
-   up(sem1);
+    up(sem1);
+    int VAL= semctl(sem1, 0, GETVAL, semun);
+
+    //sem_getvalue(sem1, &VAL);
+    printf("semval after UUUP in function %d \n",VAL);
 
 }
 
