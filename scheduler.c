@@ -36,6 +36,28 @@ void up(int sem)
     printf("semval after UUUP %d \n",VAL);
 }
 
+void down(int sem)
+{
+    /*union Semun semun;
+    int VAL=semctl(sem, 0, GETVAL, semun);
+    printf("semval from down %d \n",VAL);*/
+    
+    printf("Sch: down before the rcv..\n");
+    
+    struct sembuf p_op;
+
+    p_op.sem_num = 0;
+    p_op.sem_op = -1;
+    p_op.sem_flg = !IPC_NOWAIT;
+    if (semop(sem, &p_op, 1) == -1)
+    {
+        perror("Error in down()");
+        exit(-1);
+    }
+
+    
+}
+
 
 struct processData
 {
@@ -89,8 +111,23 @@ int main(int argc, char *argv[])
      processArray[counter]=p;
 
     }*/
-    
-    
+    union Semun semun;
+    key_t syncSendRecvSem = 7896;
+    int semSync = semget(syncSendRecvSem, 1, 0666 | IPC_CREAT);
+
+    if (semSync == -1)
+    {
+        perror("Error in create sem");
+        exit(-1);
+    }
+
+    semun.val = 0; /* initial value of the semaphore, Binary semaphore */
+    if (semctl(semSync, 0, SETVAL, semun) == -1)
+    {
+        perror("Error in semctl");
+        exit(-1);
+    }
+
     struct ProcessPCB Procsess;
     table.count=0;
     int procCount=0;
@@ -102,6 +139,8 @@ int main(int argc, char *argv[])
     if(prvtime!=getClk()){
      prvtime=getClk();
      printf("current time %d \n",prvtime);
+
+     down(semSync);
      rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
      if(rec_val == -1)
       {     // perror("Errror in rec"); 
@@ -160,6 +199,7 @@ int main(int argc, char *argv[])
   //     printf(" id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[i].processinfo[0],processArray[i].processinfo[1],processArray[i].processinfo[2],processArray[i].processinfo[3]);
 
     //PrintPCB(&table);
+    printf("scheduler is exiting..\n");
     destroyClk(true);
 }
 

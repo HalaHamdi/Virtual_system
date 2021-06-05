@@ -83,8 +83,10 @@ int main(int agrc, char *argv[])
     while (remainingtime > 0)
     {
         if(getClk()!=prvtime)
-        { remainingtime--; 
-           prvtime=getClk();
+        {   
+            printf("current time from process: %d \n",getClk());
+            remainingtime--; 
+            prvtime=getClk();
         }
     }
 

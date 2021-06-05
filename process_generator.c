@@ -1,6 +1,6 @@
 #include "headers.h"
 #include<string.h>
-
+#include <sys/sem.h>
 
 int msgq_id;
 
@@ -14,6 +14,35 @@ struct processData
     //int id;      //id of the algorithm to execute
 };
 
+
+union Semun
+{
+    int val;               /* value for SETVAL */
+    struct semid_ds *buf;  /* buffer for IPC_STAT & IPC_SET */
+    ushort *array;         /* array for GETALL & SETALL */
+    struct seminfo *__buf; /* buffer for IPC_INFO */
+    void *__pad;
+};
+
+
+void up(int sem)
+{
+    struct sembuf v_op;
+
+    v_op.sem_num = 0;
+    v_op.sem_op = 1;
+    v_op.sem_flg = !IPC_NOWAIT;
+
+    if (semop(sem, &v_op, 1) == -1)
+    {
+        perror("Error in up()");
+        exit(-1);
+    }
+
+    union Semun semun;
+    int VAL=semctl(sem, 0, GETVAL, semun);
+    printf("semval after UUUP %d \n",VAL);
+}
 
 
 void clearResources(int);
@@ -39,6 +68,23 @@ int main(int argc, char *argv[])
     AlgorithmNmber=atoi(argv[3]);
     if(argc>4){
         quantum=atoi(argv[5]);
+    }
+
+    union Semun semun;
+    key_t syncSendRecvSem = 7896;
+    int semSync = semget(syncSendRecvSem, 1, 0666 | IPC_CREAT);
+
+    if (semSync == -1)
+    {
+        perror("Error in create sem");
+        exit(-1);
+    }
+
+    semun.val = 0; /* initial value of the semaphore, Binary semaphore */
+    if (semctl(semSync, 0, SETVAL, semun) == -1)
+    {
+        perror("Error in semctl");
+        exit(-1);
     }
 
    
@@ -84,15 +130,37 @@ int main(int argc, char *argv[])
             perror("Errror in send");
     //send each process when its time comes
    int counter=0;
+   int prvTime = -1;
     while(true){
         
-        if(getClk()>=processArray[counter].processinfo[1]){
-        printf("current time from generator %d \n",getClk());
-        int send_val=msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),!IPC_NOWAIT);
-        if(send_val == -1)
-            perror("Errror in send");
-        counter++;
-        if(counter==Totallines-1){break;}
+        if(prvTime !=  getClk()){
+            printf("current time from generator %d \n",getClk());
+                
+            if(getClk()>=processArray[counter].processinfo[1]){
+                printf("Gen: new process arrived %d \n",getClk());
+                int send_val=msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),!IPC_NOWAIT);
+                printf("Gen: process sent to the Sch \n");
+                
+                if(send_val == -1)
+                    perror("Errror in send");
+                counter++;
+            }
+            prvTime = getClk();
+            
+
+            union Semun semun;
+            int VAL=semctl(semSync, 0, GETVAL, semun);
+            printf("Gen: VAL = %d\n",VAL);
+            if(VAL == 0 ){
+                //I've placed this if condition so that
+                //If Val was 1 then no need to up again
+                //Upping a semaphore with value one, would result in value = 2
+                //which introduces an undesired behavour at the down side
+                printf("Gen: up now after the send..\n");
+                up(semSync);
+            }
+            if(counter==Totallines-1){break;}
+            
         }
     }
 
@@ -108,7 +176,9 @@ int main(int argc, char *argv[])
     
     
     // 7. Clear clock resources
-   destroyClk(true);
+
+    printf("generator is exiting..\n");
+    destroyClk(true);
 }
 
 void clearResources(int signum)
