@@ -43,7 +43,7 @@ void down(int sem)
     printf("semval from down %d \n",VAL);*/
     
     printf("Sch: down before the rcv..\n");
-    
+
     struct sembuf p_op;
 
     p_op.sem_num = 0;
@@ -51,7 +51,7 @@ void down(int sem)
     p_op.sem_flg = !IPC_NOWAIT;
     if (semop(sem, &p_op, 1) == -1)
     {
-        perror("Error in down()");
+        perror("Sch: Error in down()");
         exit(-1);
     }
 
@@ -70,6 +70,8 @@ struct processData
 };
 struct PCB table;
 int runPro=0;
+bool generatorHasFinished = false;
+
 void handler(int signum)
 {
  
@@ -83,14 +85,21 @@ void handler(int signum)
   /* signal( SIGUSR1, handler); */
 }
 
+void doNotWaitForGenerator(int signum){
+    generatorHasFinished = true;
+}
+
 int shmid;
 void sendtoprocess(int remTime);
 int main(int argc, char *argv[])
 {
     initClk();
     signal (SIGUSR1, handler);
+    signal (SIGUSR2, doNotWaitForGenerator);
+    
     int prvtime=getClk();
-    printf("Schadular id= %d  \n",getpid());
+    
+    printf("Schadular id= %d \n created at time: %d \n",getpid(),prvtime);
     key_t schedulerKey=1234;
     int msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
      printf("msgq_id from Scudular %d \n",msgq_id);
@@ -121,13 +130,6 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    semun.val = 0; /* initial value of the semaphore, Binary semaphore */
-    if (semctl(semSync, 0, SETVAL, semun) == -1)
-    {
-        perror("Error in semctl");
-        exit(-1);
-    }
-
     struct ProcessPCB Procsess;
     table.count=0;
     int procCount=0;
@@ -138,9 +140,19 @@ int main(int argc, char *argv[])
 
     if(prvtime!=getClk()){
      prvtime=getClk();
+     
      printf("current time %d \n",prvtime);
-
-     down(semSync);
+     
+     //If generator hasn't finished yet
+     //then wait go down to wait as if s.th might be sent to you
+     //If generator has finished
+     //no need to down() and wait before recievness because there is nothing to recieve 5las
+     if(!generatorHasFinished){
+        down(semSync);
+        printf("check for recievness %d \n",prvtime);
+     }
+     
+     
      rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
      if(rec_val == -1)
       {     // perror("Errror in rec"); 

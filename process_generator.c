@@ -171,7 +171,15 @@ int main(int argc, char *argv[])
             break;
         }
     }*/
+    
+    //Sending a signal to the schedular to inform him
+    //that the generator has finished 
+    //and no need to wait on the down semaphore
+    //because there is nothing left to be sent before the recievness line 
+    kill(pid[1], SIGUSR2); //pid[1] refers to the pid of the forked scheduler
+
     //will wait till the scheduler finishes  sid = waitpid(pid[1],&stat_loc,0); it is better 
+    printf("generator is waiting..\n");
     wait(&stat_loc);
     
     
