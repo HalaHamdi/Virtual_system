@@ -108,6 +108,8 @@ int main(int argc, char *argv[])
             perror("Errror in rec");
 
     int TotalProcess=p.processinfo[0];
+    int AlgorithmNmber=p.processinfo[1];
+    int quantum=p.processinfo[2];
       printf("num of process from Scheudler %d \n",TotalProcess);
     struct processData  processArray[TotalProcess];
 
