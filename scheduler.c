@@ -63,10 +63,6 @@ struct processData
 {
     long mtype;
     int processinfo[4];
-    //int arrivaltime;
-    //int priority;
-    //int runningtime;
-    //int id;
 };
 struct PCB table;
 int runPro=0;
@@ -99,10 +95,10 @@ int main(int argc, char *argv[])
     
     int prvtime=getClk();
     
-    printf("Schadular id= %d \n created at time: %d \n",getpid(),prvtime);
+    printf("Scheduler id= %d \n created at time: %d \n",getpid(),prvtime);
     key_t schedulerKey=1234;
     int msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
-     printf("msgq_id from Scudular %d \n",msgq_id);
+    printf("msgq_id from Scudular %d \n",msgq_id);
 
    if(msgq_id==-1){printf("error in creating msgQueue \n"); exit(-1);}
 
@@ -112,14 +108,11 @@ int main(int argc, char *argv[])
             perror("Errror in rec");
 
     int TotalProcess=p.processinfo[0];
-      printf("num of process from Schudler %d \n",TotalProcess);
+      printf("num of process from Scheudler %d \n",TotalProcess);
     struct processData  processArray[TotalProcess];
 
-  /*  for(int counter=0 ;counter<TotalProcess;counter++ ){
-     msgrcv(msgq_id,&p,sizeof(p.processinfo),0,!IPC_NOWAIT);
-     processArray[counter]=p;
+  
 
-    }*/
     union Semun semun;
     key_t syncSendRecvSem = 7896;
     int semSync = semget(syncSendRecvSem, 1, 0666 | IPC_CREAT);
@@ -168,14 +161,8 @@ int main(int argc, char *argv[])
         Push(Procsess,&table);
         procCount++;
       }    
-        /*if(prvtime==FinshtimePro){
-        char finished[8]="finished";  
-        strcpy(table.Procsess[0].state,finished);
-        printf("process Finished %d \n",table.Procsess[0].id);
-        Remove(&table);
-        runPro=0;
-        }*/
-        //printf("Raghad \n");
+       
+        
         if(table.count!=0 && runPro==0){
         sortrunnigtime(&table);
         //FinshtimePro=prvtime+table.Procsess[0].runningtime;
@@ -199,18 +186,7 @@ int main(int argc, char *argv[])
     if(procCount==TotalProcess&& table.count==0){break;}
     }
 
-    // while (true)
-    // {
-         /* code */
-    // }
-     
-  //  if(table.count>0){
-
-  //  }
-  //  for(int i =0;i<TotalProcess;i++)
-  //     printf(" id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[i].processinfo[0],processArray[i].processinfo[1],processArray[i].processinfo[2],processArray[i].processinfo[3]);
-
-    //PrintPCB(&table);
+   
     printf("scheduler is exiting..\n");
     destroyClk(true);
 }
@@ -263,64 +239,7 @@ void sendtoprocess(int remTime){
 
 }
 
-// #include "headers.h"
-// #include"DS.h"
-// struct processData
-// {
-//     int arrivaltime;
-//     int priority; // qutaum is float
-//     int runningtime;
-//     int id;
-// };
 
-// int shmid,TotalProcess,AlgorithmNumber,msgq_id,counter=0;
-// float quantum;
-
-// void GetData(struct processData  processArray[]);
-// int main(int argc, char *argv[])
-// {
-// //    initClk();
-//     key_t schedulerKey=1234;
-//      msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
-  
-//     if(msgq_id==-1)
-//     {
-//         printf("error in creating msgQueue \n"); 
-//         exit(-1);
-//     }
-//           printf("after msgqueue scheduler \n");
-   
-//      CreatePCB();
-//     printf("howwwwwwwwwwwww \n");
-//      attach_PCB();
-//      printf("Cretead \n");
-//       struct processData p;
-//     printf(" i will recevie\n");
-// //     msgrcv(msgq_id,&p,sizeof(&p),0,!IPC_NOWAIT);
-// //     printf("%d %d  %d %d\n",p.arrivaltime,p.id,p.priority,p.runningtime);
-// //     quantum=-1;
-// //     TotalProcess=p.arrivaltime;
-// //     AlgorithmNumber=p.id;
-// //     quantum=p.priority;
-// //     struct processData  processArray[TotalProcess];
-    
-   
-// //     while(counter<TotalProcess)
-// //   {  
-// //      GetData(processArray);
-    
-// //   } 
-    
-   
-//     // for(int i =0;i<TotalProcess;i++)
-//     //  printf(" id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[i].id,processArray[i].arrivaltime,processArray[i].runningtime,processArray[i].priority);
-    
-
-//     //TODO: implement the scheduler.
-//     //TODO: upon termination release the clock resources.
-
-//     destroyClk(true);
-// }
 void CreatePCB()
 {   key_t key; 
     key=ftok("PCB",'P');
@@ -367,25 +286,3 @@ void attach_PCB()
     
      
 }
-// void GetData(struct processData  processArray[])
-// {
-//     struct processData p;
-    
-//      p.arrivaltime=-1;
-//      p.id=-1;
-//      p.priority=-1;
-//      p.runningtime=-1;
-  
-//      if(counter<TotalProcess )
-//      {  msgrcv(msgq_id,&p,sizeof(&p),0,IPC_NOWAIT);
-//         if(p.arrivaltime!=-1 && p.id!=-1 && p.runningtime!=-1)
-//         {  processArray[counter]=p;
-//             printf(" in recieving id %d , arrival; %d , runtime %d , priority; %d \n ",processArray[counter].id,processArray[counter].arrivaltime,processArray[counter].runningtime,processArray[counter].priority);
-//             counter++;
-    
-//         }
-
-//     }
-// }
-  
-

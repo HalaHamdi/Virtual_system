@@ -8,10 +8,6 @@ struct processData
 {
     long mtype;
     int processinfo[4];
-    //int arrivaltime; //total processes number for first item send to scheduler
-    //int priority;    //quantum is send if found
-    //int runningtime;
-    //int id;      //id of the algorithm to execute
 };
 
 
@@ -54,9 +50,8 @@ int main(int argc, char *argv[])
 {
 
     signal(SIGINT, clearResources);
-     printf("Process generator id= %d  \n",getpid());
-    // * taking terminal parameters 
-    //  Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
+    printf("Process generator id= %d  \n",getpid());
+   
     char fileName[50];  
     int AlgorithmNmber;
     int quantum=-1;
@@ -64,6 +59,8 @@ int main(int argc, char *argv[])
     int pid[2],stat_loc;
     struct processData Initiator;
    
+    // * taking terminal parameters 
+    //  Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
     strcpy(fileName,argv[1]);
     AlgorithmNmber=atoi(argv[3]);
     if(argc>4){
@@ -107,18 +104,16 @@ int main(int argc, char *argv[])
     // Create a data structure for processes and provide it with its parameters.
     
     msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
-   printf("msgq_id from generator %d \n",msgq_id);
+    printf("msgq_id from generator %d \n",msgq_id);
 
     if(msgq_id==-1){
         printf("error in creating msgQueue \n");
          exit(-1);}
 
 
-    // 6. Send the Initiator which contains the number of processes , Algorithm number adn any extra parameter (e.g :quantum).
+    //Send the Initiator which contains the number of processes , Algorithm number and any extra parameter (e.g :quantum).
     printf("num of process from generator %d \n",Totallines-1);
-    //Initiator.arrivaltime=Totallines-1; //the TotalProcesses will be sent in the arrivaltime  
-    //Initiator.id=AlgorithmNmber;         //the AlgorithmNmber will be sent in the id  
-    //Initiator.priority=quantum;         //the quantum will be sent in the priority BUT NEEDS  TO BE FLOAT  
+
     Initiator.processinfo[0]=Totallines-1;
     Initiator.processinfo[1]=AlgorithmNmber;
     Initiator.processinfo[2]=quantum;
@@ -127,10 +122,10 @@ int main(int argc, char *argv[])
     int send_val=msgsnd(msgq_id,&Initiator,sizeof(Initiator.processinfo),!IPC_NOWAIT);
 
      if(send_val == -1)
-            perror("Errror in send");
+     perror("Errror in send");
     //send each process when its time comes
-   int counter=0;
-   int prvTime = -1;
+    int counter=0;
+    int prvTime = -1;
     while(true){
         
         if(prvTime !=  getClk()){
@@ -164,27 +159,21 @@ int main(int argc, char *argv[])
         }
     }
 
-  /*  printf("ftimeeeeeeee %d \n",processArray[Totallines-1].processinfo[1]+processArray[Totallines-1].processinfo[2]);
-    while(true){
-        printf("current time %d \n",getClk());
-        if(processArray[Totallines-1].processinfo[1]+processArray[Totallines-1].processinfo[2]<getClk()){
-            break;
-        }
-    }*/
+
     
-    //Sending a signal to the schedular to inform him
+    //Sending a signal to the scheduler to inform him
     //that the generator has finished 
     //and no need to wait on the down semaphore
     //because there is nothing left to be sent before the recievness line 
     kill(pid[1], SIGUSR2); //pid[1] refers to the pid of the forked scheduler
 
-    //will wait till the scheduler finishes  sid = waitpid(pid[1],&stat_loc,0); it is better 
+    //will wait till the scheduler finishes   
     printf("generator is waiting..\n");
-    wait(&stat_loc);
+    waitpid(pid[1],&stat_loc,0);
     
     
-    // 7. Clear clock resources
-
+    
+    // 7. Clear clock resourcess
     printf("generator is exiting..\n");
     destroyClk(true);
 }
@@ -202,8 +191,6 @@ void getChildren(int pid[]){
     if(pid[0]==-1){perror("error in forking clock");}
     else if (pid[0]==0){
         execl("./clk.out","clk.out",NULL); 
-        // need to ensure that it is in clk.o format 
-        //need to generalize the bin directory
     }
 
     pid[1]=fork();
@@ -233,7 +220,7 @@ void storeProcessData(struct processData processArray[],FILE *fp,int Totallines)
     char word[20];
     //skip the first line 
     for(int i=0;i<4;i++){fscanf(fp,"%s",word);}
-    //store the 
+    //store the processes 
     for(int i=0;i<Totallines-1;i++){
         struct processData p;
         fscanf(fp,"%d",&p.processinfo[0]);

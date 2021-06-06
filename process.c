@@ -38,7 +38,7 @@ int remainingtime;
 
 int main(int agrc, char *argv[])
 {
-    printf("Hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii you are in process %d \n",getpid());
+    printf("you are in process %d \n",getpid());
     initClk();
     int shmid, pid,sempho1;
      key_t memo=7893;
@@ -73,7 +73,7 @@ int main(int agrc, char *argv[])
     int VAL=semctl(sem1, 0, GETVAL, semun);
     printf("semval %d \n",VAL);
     down(sem1);
-    //printf("Hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii you are in process2 \n");
+
     char runTime[10];
     strcpy(runTime,(char *) shmaddr);
     //TODO The process needs to get the remaining time from somewhere
