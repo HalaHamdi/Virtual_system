@@ -33,7 +33,7 @@ void up(int sem)
 
     union Semun semun;
     int VAL=semctl(sem, 0, GETVAL, semun);
-    printf("semval after UUUP %d \n",VAL);
+    //printf("semval after UUUP %d \n",VAL);
 }
 
 void down(int sem)
@@ -138,19 +138,21 @@ int main(int argc, char *argv[])
      
      printf("current time %d \n",prvtime);
      
+    
      //If generator hasn't finished yet
      //then wait go down to wait as if s.th might be sent to you
      //If generator has finished
      //no need to down() and wait before recievness because there is nothing to recieve 5las
      if(!generatorHasFinished){
         down(semSync);
-        printf("check for recievness %d \n",prvtime);
+     //   printf("check for recievness %d \n",prvtime);
      }
      
-     
+    while(true){
      rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
      if(rec_val == -1)
       {     // perror("Errror in rec"); 
+        break;
       }
       else{
         printf("process ID %d \n",p.processinfo[0]);
@@ -164,7 +166,7 @@ int main(int argc, char *argv[])
         procCount++;
       }    
        
-        
+     }  
         if(table.count!=0 && runPro==0){
         sortrunnigtime(&table);
         //FinshtimePro=prvtime+table.Procsess[0].runningtime;
@@ -237,7 +239,7 @@ void sendtoprocess(int remTime){
     int VAL= semctl(sem1, 0, GETVAL, semun);
 
     //sem_getvalue(sem1, &VAL);
-    printf("semval after UUUP in function %d \n",VAL);
+    //printf("semval after UUUP in function %d \n",VAL);
 
 }
 

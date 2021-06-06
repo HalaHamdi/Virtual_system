@@ -131,10 +131,10 @@ int main(int argc, char *argv[])
         if(prvTime !=  getClk()){
             printf("current time from generator %d \n",getClk());
                 
-            if(getClk()>=processArray[counter].processinfo[1]){
+            while(getClk()>=processArray[counter].processinfo[1] && counter<Totallines-1){
                 printf("Gen: new process arrived %d \n",getClk());
                 int send_val=msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),!IPC_NOWAIT);
-                printf("Gen: process sent to the Sch \n");
+                //printf("Gen: process sent to the Sch \n");
                 
                 if(send_val == -1)
                     perror("Errror in send");
@@ -145,13 +145,13 @@ int main(int argc, char *argv[])
 
             union Semun semun;
             int VAL=semctl(semSync, 0, GETVAL, semun);
-            printf("Gen: VAL = %d\n",VAL);
+            //printf("Gen: VAL = %d\n",VAL);
             if(VAL == 0 ){
                 //I've placed this if condition so that
                 //If Val was 1 then no need to up again
                 //Upping a semaphore with value one, would result in value = 2
                 //which introduces an undesired behavour at the down side
-                printf("Gen: up now after the send..\n");
+              //  printf("Gen: up now after the send..\n");
                 up(semSync);
             }
             if(counter==Totallines-1){break;}
