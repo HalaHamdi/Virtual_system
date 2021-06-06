@@ -72,14 +72,39 @@ void Removeone(int pid,struct PCB *Object)
         }
     }
     if(index!=-1)
-  { for(int i=index;i<Object->count;i++)
-   {
-         Object->Procsess[i]=Object->Procsess[i+1];
-   }
-   POP(Object);
-  }
+    { 
+        for(int i=index;i<Object->count;i++)
+        {
+            Object->Procsess[i]=Object->Procsess[i+1];
+        }
+        POP(Object);
+    }
 
 }
+
+void shiftStartingFrom(int start, struct PCB *theTable){
+    for(int j = theTable->count-1; j >= start; j--){
+        theTable->Procsess[j+1] = theTable->Procsess[j]; 
+    }
+    theTable->count++;
+}
+
+//Assuming the PCBTable is already sorted
+//Insert in it this new Process entry in its correct sorted relative position
+void InsertSortedByRemainTime(struct ProcessPCB entry,struct PCB *theTable){
+    
+    for(int i=0; i < (theTable->count); i++){
+        if(entry.remanningtime < theTable->Procsess[i].remanningtime){
+            shiftStartingFrom(i, theTable);
+            theTable->Procsess[i] = entry;
+            return;
+        }
+    }
+    //If all the processes has remainingTime less than the current inserted entry
+    //Then place it at the last position
+    theTable->Procsess[theTable->count++] = entry;
+}
+
 void Insert(struct ProcessPCB p,struct PCB *Object)
 {
     Object->count ++;
