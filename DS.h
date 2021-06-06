@@ -18,6 +18,9 @@ struct PCB
 {
    struct ProcessPCB Procsess[MAX_SIZE];
    int count;
+   struct  ProcessPCB Run;
+ 
+   
   
 
    
@@ -105,6 +108,19 @@ void InsertSortedByRemainTime(struct ProcessPCB entry,struct PCB *theTable){
     theTable->Procsess[theTable->count++] = entry;
 }
 
+void InsertSortBypriority(struct ProcessPCB entry,struct PCB *theTable)
+{
+   for(int i=0; i < (theTable->count); i++){
+        if(entry.priority < theTable->Procsess[i].priority){
+            shiftStartingFrom(i, theTable);
+            theTable->Procsess[i] = entry;
+            return;
+        }
+    }
+    //If all the processes has Priority less than the current inserted entry
+    //Then place it at the last position
+    theTable->Procsess[theTable->count++] = entry;
+}
 void Insert(struct ProcessPCB p,struct PCB *Object)
 {
     Object->count ++;
@@ -150,6 +166,7 @@ void Swap(int i,int j,struct PCB *Object)
    Object->Procsess[j]=P;
 
 }
+
 void sortrunnigtime(struct PCB *Object)
 {
     

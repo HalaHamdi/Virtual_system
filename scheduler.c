@@ -81,18 +81,20 @@ void handler(int signum)
   /* signal( SIGUSR1, handler); */
 }
 
+
 void doNotWaitForGenerator(int signum){
     generatorHasFinished = true;
 }
 
 int shmid;
+int running=1;
 void sendtoprocess(int remTime);
 int main(int argc, char *argv[])
 {
     initClk();
     signal (SIGUSR1, handler);
     signal (SIGUSR2, doNotWaitForGenerator);
-    
+   
     int prvtime=getClk();
     
     printf("Scheduler id= %d \n created at time: %d \n",getpid(),prvtime);
@@ -108,6 +110,7 @@ int main(int argc, char *argv[])
             perror("Errror in rec");
 
     int TotalProcess=p.processinfo[0];
+    int Algorthim=p.processinfo[1];
       printf("num of process from Scheudler %d \n",TotalProcess);
     struct processData  processArray[TotalProcess];
 
@@ -158,8 +161,15 @@ int main(int argc, char *argv[])
         Procsess.priority=p.processinfo[3];
         Procsess.remanningtime=p.processinfo[2];
         strcpy(Procsess.state,State);
-        Push(Procsess,&table);
+       
         procCount++;
+         if(Algorthim==4)
+        {
+            InsertSortBypriority(Procsess,&table);
+            PreemtiveHPF(&table);
+            
+           
+        }
       }    
        
         
@@ -259,30 +269,92 @@ void attach_PCB()
 {
     printf("%d \n",shmid);
      void *shmaddr = shmat(shmid, (void *)0, 0);
-     printf("non problem \n");
-    
-
-    // struct PCB value;
-    // struct PCB  *Object=&value;
-    //   printf("non problem1 \n");
-    //           Object = (struct PCB*) shmaddr;
-    //             printf("non problem2 \n");
-    //             value.count=0;
-    //             Object=&value;
-             
-    //           printf("non problem3 \n");
-    //          shmaddr=Object;
-    //            printf("non problem4\n");
-               
-    //           printf("ahhhhhhhhhhhhhhhh %d \n",Object->count);
-    //      printf("ahhhhhh  %d \n",( (struct PCB*) shmaddr)->count);
-       
-    //      struct ProcessPCB mp;
-    //      mp.arrivaltime=1000;
-    //      mp.id=5;
-    //      mp.priority=10;
-    //      Insert(mp,((struct PCB*) shmaddr));
-    //      printf("jjjjj %d %d %d", ( (struct PCB*) shmaddr)->Procsess[0].arrivaltime, ( (struct PCB*) shmaddr)->Procsess[0].id, ( (struct PCB*) shmaddr)->Procsess[0].priority);
-    
+     printf("non problem \n");    
      
+}
+void PreemtiveHPF(struct PCB *table)
+{
+    char remain;
+    strcpy(remain,shmaddr);
+   if(running==0)
+    {  struct ProcessPCB p=table->Procsess[0];
+      if(table->Procsess[0].state!="stopped")
+      {  char state[7]="running";
+        strcpy(table->Procsess[0].state,state);
+       running=1;
+       sendtoprocess(table->Procsess[0].remanningtime);
+       table->Run=table->Procsess[0];
+      int  pid=fork();
+
+        if(pid==0)
+        {
+        
+          execl("./process.out","process.out",NULL);
+        }
+        else if(pid==-1)
+        
+        {
+            printf("Error \n");
+            exit(-1);
+        }
+        else
+        { table->Procsess[0].pid=pid;
+            running==0;
+        }
+      }
+      else
+      {
+            char state[7]="running";
+          strcpy(table->Procsess[0].state,state);
+          kill(table->Procsess[0].pid,SIGCONT);
+      }
+    }
+    else{
+        // try to preeemtive it if you can
+        table->Procsess[running].remanningtime=remain+'0';
+        int index_running=getProcess(table->Run.pid,table);
+        if(table->Procsess[0].pid!=table->Procsess[index_running].pid)
+        {
+             char state[7]="stopped";
+             strcpy(table->Procsess[index_running].state,state);
+              strcpy(remain,shmaddr);
+             table->Procsess[index_running].remanningtime=remain+'0';
+             kill(table->Procsess[index_running].pid,SIGSTOP);
+             struct ProcessPCB p=table->Procsess[0];
+            if(table->Procsess[0].state!="stopped")
+            {  char state[7]="running";
+                strcpy(table->Procsess[0].state,state);
+            running=1;
+            sendtoprocess(table->Procsess[0].remanningtime);
+            table->Run=table->Procsess[0];
+            int  pid=fork();
+
+                if(pid==0)
+                {
+                
+                execl("./process.out","process.out",NULL);
+                }
+                else if(pid==-1)
+                
+                {
+                    printf("Error \n");
+                    exit(-1);
+                }
+                else
+                { table->Procsess[0].pid=pid;
+                    running==0;
+                }
+            }
+            else
+            {
+                char state[7]="running";
+                strcpy(table->Procsess[0].state,state);
+                kill(table->Procsess[0].pid,SIGCONT);
+            }
+
+        }
+
+    }
+      
+       
 }

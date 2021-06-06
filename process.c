@@ -86,6 +86,8 @@ int main(int agrc, char *argv[])
         {   
             printf("current time from process: %d \n",getClk());
             remainingtime--; 
+            char remain=remainingtime+'0';
+            strcpy(shmaddr,remain);
             prvtime=getClk();
         }
     }
