@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
       }    
        
      }  
-     if(AlgorithmNmber==1)
+     if(AlgorithmNmber==2)
         {if(table.count!=0 && runPro==0){
         sortrunnigtime(&table);
         //FinshtimePro=prvtime+table.Procsess[0].runningtime;
