@@ -41,8 +41,6 @@ void down(int sem)
     /*union Semun semun;
     int VAL=semctl(sem, 0, GETVAL, semun);
     printf("semval from down %d \n",VAL);*/
-    
-    printf("Sch: down before the rcv..\n");
 
     struct sembuf p_op;
 
@@ -82,6 +80,7 @@ struct processData
 struct PCB table;
 int runPro=0;
 bool generatorHasFinished = false;
+int pid=-1;
 
 void  dealwithFinished()
 {
@@ -105,6 +104,9 @@ void doNotWaitForGenerator(int signum){
 
 int shmid;
 void sendtoprocess(int remTime);
+void handleNextProcess();
+int getRemTimeFromProcess();
+
 int main(int argc, char *argv[])
 {
     initClk();
@@ -118,20 +120,19 @@ int main(int argc, char *argv[])
     int msgq_id=msgget(schedulerKey,0666|IPC_CREAT);
     printf("msgq_id from Scudular %d \n",msgq_id);
 
-   if(msgq_id==-1){printf("error in creating msgQueue \n"); exit(-1);}
+    if(msgq_id==-1){printf("error in creating msgQueue \n"); exit(-1);}
 
     struct processData p;
     int rec_val=msgrcv(msgq_id,&p,sizeof(p.processinfo),0,!IPC_NOWAIT);
     if(rec_val == -1)
-            perror("Errror in rec");
+        perror("Errror in rec");
 
     int TotalProcess=p.processinfo[0];
     int AlgorithmNmber=p.processinfo[1];
     int quantum=p.processinfo[2];
-      printf("num of process from Scheudler %d \n",TotalProcess);
+    printf("num of process from Scheudler %d \n",TotalProcess);
     struct processData  processArray[TotalProcess];
 
-  
 
     union Semun semun;
     key_t syncSendRecvSem = 7896;
@@ -169,87 +170,224 @@ int main(int argc, char *argv[])
     table.count=0;
     int procCount=0;
     char State[]="waiting";
+    char stoppedState[] = "stopped";
     int FinshtimePro=-1; //Finishtrime for the runing process if it is nonPreemptive
-    int pid=-1;
-    while(true){
-
-    if(prvtime!=getClk()){
-     prvtime=getClk();
-     
-     printf("current time %d \n",prvtime);
-     
     
-     //If generator hasn't finished yet
-     //then wait go down to wait as if s.th might be sent to you
-     //If generator has finished
-     //no need to down() and wait before recievness because there is nothing to recieve 5las
-     if(!generatorHasFinished){
-        down(semSync);
-     //   printf("check for recievness %d \n",prvtime);
-     }
-     
+    //flag determines something have been recieved in this time step
+    bool hasRecivedNow = false;
+    int currentProcessRemTime = -1;
     while(true){
-     rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
-     if(rec_val == -1)
-      {     // perror("Errror in rec"); 
-        break;
-      }
-      else{
-        printf("process ID %d \n",p.processinfo[0]);
-        Procsess.id=p.processinfo[0];
-        Procsess.arrivaltime=p.processinfo[1];
-        Procsess.runningtime=p.processinfo[2];
-        Procsess.priority=p.processinfo[3];
-        Procsess.remanningtime=p.processinfo[2];
-        Procsess.wait=0;
-        strcpy(Procsess.state,State);
-        Push(Procsess,&table);
-        procCount++;
-      }    
-     }  
-     if(AlgorithmNmber==2 || AlgorithmNmber==1){
-        if(FinshtimePro==prvtime){  //there is processes should be terminate
-             down(semFinish);
-             dealwithFinished();
+
+        if(prvtime!=getClk()){
+            prvtime=getClk();
+            
+            printf("current time %d \n",prvtime);
+            
+            //reading the remianing time from the currently running process
+            if(runPro != 0){
+                //for each time step where a process is running
+                //read its remaining time
+                //This is done for each second not only at times when something new arrived
+                //Since we want to ensure that every up in the process is consumed and corresponds to a down in the scheduler
+                currentProcessRemTime = getRemTimeFromProcess();
+                table.Procsess[getProcess(pid,&table)].remanningtime = currentProcessRemTime;
+                    
+            }
+
+            //If generator hasn't finished yet
+            //then wait go down to wait as if s.th might be sent to you
+            //If generator has finished
+            //no need to down() and wait before recievness because there is nothing to recieve 5las
+            if(!generatorHasFinished){
+                printf("Sch: down before the rcv..\n");
+                down(semSync);
+                printf("check for recievness %d \n",prvtime);
+            }
+            
+            //Recieving new arrived processes if found 
+            while(true){
+                rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
+                if(rec_val == -1)
+                {     // perror("Errror in rec"); 
+                    break;
+                }
+                else{
+                    //something have arrived
+                    hasRecivedNow = true;
+                        
+                    printf("process ID %d \n",p.processinfo[0]);
+                    Procsess.id=p.processinfo[0];
+                    Procsess.arrivaltime=p.processinfo[1];
+                    Procsess.runningtime=p.processinfo[2];
+                    Procsess.priority=p.processinfo[3];
+                    Procsess.remanningtime=p.processinfo[2];
+                    Procsess.wait=0;
+                    strcpy(Procsess.state,State);
+                    if(AlgorithmNmber == 4){
+                        InsertSortedByRemainTime(Procsess, &table);
+                    }
+                    else{
+                        Push(Procsess,&table);
+                    }
+                    procCount++;
+                }    
+            }
+            printf("table count %d\n",table.count);
+
+            //Redirecting
+            if(AlgorithmNmber==2 || AlgorithmNmber==1){
+                if(FinshtimePro==prvtime){  //there is processes should be terminate
+                    down(semFinish);
+                    dealwithFinished();
+                }
+
+                if(table.count!=0 && runPro==0){
+                    if(AlgorithmNmber==2){    
+                    sortrunnigtime(&table);
+                    }
+                    //FinshtimePro=prvtime+table.Procsess[0].runningtime;
+                    sendtoprocess(table.Procsess[0].runningtime);   
+                    
+                    pid=fork();
+                    if(pid==-1){perror("error in forking clock");}
+                    else if (pid==0){                                 //child
+                        execl("./process.out","process.out",NULL);
+                        }
+                    
+                    char runing[]="started";
+                    printf("process started %d \n",table.Procsess[0].id);  
+                    strcpy(table.Procsess[0].state,runing);
+                    table.Procsess[0].pid=pid;
+                    WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+                    runPro=1;
+                    FinshtimePro=prvtime+table.Procsess[0].runningtime;
+                }
+            }
+            else if(AlgorithmNmber==3)
+            {
+                sortpriority(&table);
+                PreemtiveHPF();
+            }
+            else if (AlgorithmNmber == 4){
+                if(currentProcessRemTime == 0){
+                    dealwithFinished();
+                }
+                
+                //if a new process has arrived go compare it with the currently running
+                if(table.count!=0 && runPro!=0 && hasRecivedNow){
+                    
+                    int currentRunningIndex = getProcess(pid,&table);
+                    
+                    printf("currentRunningIndex: %d\n",currentRunningIndex);
+                    PrintProcess(table.Procsess[0]);
+                    //if the remaining time of the processes currently running is larger than that of the first process in the queue (the process that mostly deserves to run in SRTN) 
+                    if(currentProcessRemTime > table.Procsess[0].remanningtime){
+                        //send stop signal to the currently running process
+                        
+                        printf("sending a stop signal \n");
+                        kill(pid,SIGSTOP);
+                        strcpy(table.Procsess[currentRunningIndex].state,stoppedState);
+                        runPro = 0;
+
+                        WritetoFile(table.Procsess[currentRunningIndex].id,table.Procsess[currentRunningIndex].state,table.Procsess[currentRunningIndex].arrivaltime,table.Procsess[currentRunningIndex].runningtime,table.Procsess[currentRunningIndex].remanningtime,table.Procsess[currentRunningIndex].wait);
+
+                    }
+                    //update the Remaining time of the currently running process with the value it has read from the shared mem
+                    PrintProcess(table.Procsess[currentRunningIndex]);
+                    
+                }
+                //if no process is currently running, go fetch the next one
+                if(table.count!=0 && runPro==0){
+                    handleNextProcess();
+                }
+            }
+            hasRecivedNow = false;
         }
 
-        if(table.count!=0 && runPro==0){
-        if(AlgorithmNmber==2){    
-        sortrunnigtime(&table);
-        }
-        //FinshtimePro=prvtime+table.Procsess[0].runningtime;
-        sendtoprocess(table.Procsess[0].runningtime);   
-        
-        pid=fork();
-        if(pid==-1){perror("error in forking clock");}
-        else if (pid==0){                                 //child
-            execl("./process.out","process.out",NULL);
-             }
-          
-        char runing[]="started";
-        printf("process started %d \n",table.Procsess[0].id);  
-        strcpy(table.Procsess[0].state,runing);
-        table.Procsess[0].pid=pid;
-        WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
-        runPro=1;
-        FinshtimePro=prvtime+table.Procsess[0].runningtime;
-        }
-        }
-        else if(AlgorithmNmber==4)
-        {
-             sortpriority(&table);
-             PreemtiveHPF();
-        }
-        
-
-    }
-
-    if(procCount==TotalProcess&& table.count==0){break;}
+        if(procCount==TotalProcess&& table.count==0){break;}
     }
 
     Closefile();
     printf("scheduler is exiting..\n");
     destroyClk(true);
+}
+void handleNextProcess(){
+
+        printf("In handling next process\n");
+        if(strcmp(table.Procsess[0].state,"waiting") == 0){  
+            sendtoprocess(table.Procsess[0].remanningtime); 
+            printf("Forking nxt process\n");
+            pid=fork();
+            if(pid==-1){perror("error in forking clock");}
+            else if (pid==0){                                 //child
+                execl("./process.out","process.out",NULL);
+            }    
+            char runing[]="started";
+            printf("process started %d \n",table.Procsess[0].id);  
+            strcpy(table.Procsess[0].state,runing);
+            table.Procsess[0].pid = pid;
+            
+            WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+                    
+        }
+        else if (strcmp(table.Procsess[0].state,"stopped") == 0){
+            //if the current proccess to be runned had a stopped state
+            //then no need to fork it, it was already forked before
+            //send to it a continue signal with its latest remaining time
+            pid = table.Procsess[0].pid;
+            kill(pid,SIGCONT);
+            char resumed[]="resumed";
+            printf("process resumed! %d \n",table.Procsess[0].id);  
+            strcpy(table.Procsess[0].state,resumed);
+
+            WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+
+        }
+        //whatever was the state, now we have a running process
+        runPro=1;
+}
+
+
+int getRemTimeFromProcess(){
+
+    int shmid, pid,sempho1;
+    //memo = ftok("Up", 'r');
+     sempho1 = ftok("sem1", 'a');
+     key_t memo=7893;
+     //key_t sempho1=7894;
+
+    shmid = shmget(memo, 4096, IPC_CREAT | 0644);
+
+    if (shmid == -1)
+    {
+        perror("Error in create");
+        exit(-1);
+    }
+    void *shmaddr = shmat(shmid, (void *)0, 0);
+   /* if (shmaddr == -1)
+    {
+        perror("Error in attach in Clint");
+        exit(-1);
+    }*/
+    union Semun semun;
+
+    int sem1 = semget(sempho1, 1, 0666 | IPC_CREAT);
+
+    if (sem1 == -1)
+    {
+        perror("Error in create sem");
+        exit(-1);
+    }
+
+    char remTimeString[10];
+    down(sem1);
+    
+    
+    strcpy(remTimeString, (char *) shmaddr);
+    int remTime = atoi(remTimeString);
+    printf("Remaining Time recieved from the process %d \n", remTime);
+    //table.Procsess[0].remanningtime = remTime;
+    return remTime;
 }
 
 void sendtoprocess(int remTime){
@@ -289,9 +427,9 @@ void sendtoprocess(int remTime){
         exit(-1);
     }
     char text[10];
-   sprintf(text, "%d", remTime);  
-   strcpy((char *) shmaddr,text);
-   //memset(shmaddr,remTime,1);
+    sprintf(text, "%d", remTime);  
+    strcpy((char *) shmaddr,text);
+    //memset(shmaddr,remTime,1);
     up(sem1);
     int VAL= semctl(sem1, 0, GETVAL, semun);
 

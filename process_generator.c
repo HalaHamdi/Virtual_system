@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
                 //If Val was 1 then no need to up again
                 //Upping a semaphore with value one, would result in value = 2
                 //which introduces an undesired behavour at the down side
-              //  printf("Gen: up now after the send..\n");
+                printf("Gen: up now after the send..\n");
                 up(semSync);
             }
             if(counter==Totallines-1){break;}

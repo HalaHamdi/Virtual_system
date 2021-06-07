@@ -103,7 +103,8 @@ void InsertSortedByRemainTime(struct ProcessPCB entry,struct PCB *theTable){
     }
     //If all the processes has remainingTime less than the current inserted entry
     //Then place it at the last position
-    theTable->Procsess[theTable->count++] = entry;
+    theTable->Procsess[theTable->count] = entry;
+    theTable->count=theTable->count+1;
 }
 
 void Insert(struct ProcessPCB p,struct PCB *Object)
@@ -189,7 +190,15 @@ void sortpriority(struct PCB *Object)
     
     
 }
-
+void PrintProcess(struct ProcessPCB p)
+{
+    printf("pid: %d \n",p.pid);
+    printf("id: %d \n",p.id);
+    printf("arrival time: %d \n",p.arrivaltime);
+    printf("running time: %d \n",p.runningtime);
+    printf("remaining time: %d \n",p.remanningtime);
+    printf("state: %s \n\n",p.state);
+}
 void PrintPCB(struct PCB *Object)
 {
     for(int i=0;i<Object->count;i++)

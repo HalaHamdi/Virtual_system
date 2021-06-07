@@ -55,13 +55,14 @@ void down(int sem)
 /* Modify this file as needed*/
 int remainingtime;
 
+
 int main(int agrc, char *argv[])
 {
     printf("you are in process %d \n",getpid());
     initClk();
     int shmid, pid,sempho1;
-     key_t memo=7893;
-     sempho1 = ftok("sem1", 'a');
+    key_t memo=7893;
+    sempho1 = ftok("sem1", 'a');
     // key_t sempho1=7894;
 
     shmid = shmget(memo, 4096, IPC_CREAT | 0644);
@@ -81,14 +82,15 @@ int main(int agrc, char *argv[])
         perror("Error in create sem");
         exit(-1);
     }
-/*
+    
+    /*
     semun.val = 0; 
     if (semctl(sem1, 0, SETVAL, semun) == -1)
     {
         perror("Error in semctl");
         exit(-1);
     }
-  */ 
+   */
     int VAL=semctl(sem1, 0, GETVAL, semun);
     printf("semval %d \n",VAL);
     down(sem1);
@@ -103,10 +105,30 @@ int main(int agrc, char *argv[])
     {
         if(getClk()!=prvtime)
         {   
-            printf("current time from process: %d \n",getClk());
-            remainingtime--; 
-            prvtime=getClk();
+            if(getClk()!= prvtime +1){
+                prvtime=getClk();
+            }
+            else{
+                printf("current time from process: %d \n",getClk());
+                remainingtime--; 
+                prvtime=getClk();
+                
+                printf("process: remTime %d \n",remainingtime);
+                
+                //Send the latest remaining time to the scheduler
+                char text[10];
+                sprintf(text, "%d", remainingtime);  
+                strcpy((char *) shmaddr,text);
+                
+                int VAL= semctl(sem1, 0, GETVAL, semun);
+                printf("semval after UUUP in function %d \n",VAL);
+                //if wasn't a zero, then it's already upped , no need to up it twice
+                if(VAL == 0){
+                    up(sem1);
+                }
+            }
         }
+        
     }
 
     key_t FinsgedrocessSem = 7788;
