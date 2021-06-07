@@ -75,7 +75,7 @@ int main(int agrc, char *argv[])
     down(sem1);
 
     char runTime[10];
-    strcpy(runTime,(char *) shmaddr);
+     strcpy(runTime,(char *) shmaddr);
     //TODO The process needs to get the remaining time from somewhere
     remainingtime = atoi(runTime);
     printf("runTime From process %d \n",remainingtime);
@@ -86,8 +86,8 @@ int main(int agrc, char *argv[])
         {   
             printf("current time from process: %d \n",getClk());
             remainingtime--; 
-            char remain=remainingtime+'0';
-            strcpy(shmaddr,remain);
+            // char remain=remainingtime+'0';
+            // strcpy(shmaddr,remain);
             prvtime=getClk();
         }
     }
