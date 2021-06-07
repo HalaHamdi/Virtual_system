@@ -18,9 +18,9 @@ struct PCB
 {
    struct ProcessPCB Procsess[MAX_SIZE];
    int count;
-  
-
+   struct ProcessPCB Run;
    
+
 };
 
 // where should i decaler it???
@@ -169,6 +169,26 @@ void sortrunnigtime(struct PCB *Object)
     
     
 }
+void sortpriority(struct PCB *Object)
+{
+    
+   
+    for(int i=0;i<Object->count;i++)
+    {
+        int index=i;
+          for(int j=i+1;j<Object->count;j++)
+          {
+                   if(Object->Procsess[index].priority>Object->Procsess[j].priority)
+                   {
+                       index=j;
+                   }
+          }
+          Swap(index,i,Object);
+    }
+    
+    
+}
+
 void PrintPCB(struct PCB *Object)
 {
     for(int i=0;i<Object->count;i++)
