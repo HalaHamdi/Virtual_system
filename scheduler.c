@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
         procCount++;
        
       }    
-        if (Algorthim!=4)
+        if (Algorthim!=3)
         {
            
         if(table.count!=0 && runPro==0){
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
         }
         
         }
-          if(Algorthim==4)
+          if(Algorthim==3)
         {
           
          sortpriority(&table);
@@ -397,7 +397,7 @@ void PreemtiveHPF()
              char state[7]="stopped";
              strcpy(table.Procsess[index_running].state,state);
 
-             table.Procsess[index_running].remanningtime=atoi(remain);
+            // table.Procsess[index_running].remanningtime=atoi(remain);
              printf("Process %d Stopped\n",table.Procsess[index_running].id);
              // send signal for process to stop it
              kill(table.Procsess[index_running].pid,SIGSTOP);
