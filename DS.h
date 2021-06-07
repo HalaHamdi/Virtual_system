@@ -9,6 +9,7 @@ struct ProcessPCB
     int priority;
     int runningtime;
     int remanningtime;
+    int wait;
     int id;
     int pid;
     char state[10];

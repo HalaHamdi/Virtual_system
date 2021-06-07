@@ -57,6 +57,21 @@ void down(int sem)
 
     
 }
+FILE * fp;
+void Openfile(){
+   fp = fopen ("scheduler.log","w");
+   fprintf (fp, "#At time x process y state arr w total z remaing y wait k \n");
+}
+void Closefile(){
+fclose (fp);
+}
+
+void WritetoFile(int id,char *state,int arr,int total,int remaining,int wait){
+    if(state!="finished"){
+        fprintf(fp,"At time %d process %d %s arr %d total %d remain %d wait %d \n",getClk(),id,state,arr,total,remaining,wait);
+    }
+
+}
 
 
 struct processData
@@ -68,13 +83,14 @@ struct PCB table;
 int runPro=0;
 bool generatorHasFinished = false;
 
-void handler(int signum)
+void  dealwithFinished()
 {
- 
     //printf("My Pid is [%d], and i have got signal #%d\n",getpid(), signum);
-    char finished[8]="finished";  
+    char finished[]="finished";  
     strcpy(table.Procsess[0].state,finished);
     printf("process Finished %d \n",table.Procsess[0].id);
+    table.Procsess[0].remanningtime=0;
+    WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
     Remove(&table);
     runPro=0;
   
@@ -85,14 +101,16 @@ void doNotWaitForGenerator(int signum){
     generatorHasFinished = true;
 }
 
+ 
+
 int shmid;
 void sendtoprocess(int remTime);
 int main(int argc, char *argv[])
 {
     initClk();
-    signal (SIGUSR1, handler);
+    //signal (SIGUSR1, handler);
     signal (SIGUSR2, doNotWaitForGenerator);
-    
+    Openfile();   
     int prvtime=getClk();
     
     printf("Scheduler id= %d \n created at time: %d \n",getpid(),prvtime);
@@ -132,11 +150,26 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
+    key_t FinsgedrocessSem = 7788;
+    int semFinish = semget(FinsgedrocessSem, 1, 0666 | IPC_CREAT);
+
+    if (semFinish == -1)
+    {
+        perror("Error in create sem FinsgedrocessSem");
+        exit(-1);
+    }
+    if (semctl(semFinish, 0, SETVAL, semun) == -1)
+    {
+        perror("Error in semctl");
+        exit(-1);
+    }
+
+
     struct ProcessPCB Procsess;
     table.count=0;
     int procCount=0;
-    char State[7]="waiting";
-    //int FinshtimePro=-1;
+    char State[]="waiting";
+    int FinshtimePro=-1; //Finishtrime for the runing process if it is nonPreemptive
     int pid=-1;
     while(true){
 
@@ -168,15 +201,22 @@ int main(int argc, char *argv[])
         Procsess.runningtime=p.processinfo[2];
         Procsess.priority=p.processinfo[3];
         Procsess.remanningtime=p.processinfo[2];
+        Procsess.wait=0;
         strcpy(Procsess.state,State);
         Push(Procsess,&table);
         procCount++;
       }    
-       
      }  
-     if(AlgorithmNmber==2)
-        {if(table.count!=0 && runPro==0){
+     if(AlgorithmNmber==2 || AlgorithmNmber==1){
+        if(FinshtimePro==prvtime){  //there is processes should be terminate
+             down(semFinish);
+             dealwithFinished();
+        }
+
+        if(table.count!=0 && runPro==0){
+        if(AlgorithmNmber==2){    
         sortrunnigtime(&table);
+        }
         //FinshtimePro=prvtime+table.Procsess[0].runningtime;
         sendtoprocess(table.Procsess[0].runningtime);   
         
@@ -186,16 +226,19 @@ int main(int argc, char *argv[])
             execl("./process.out","process.out",NULL);
              }
           
-        char runing[7]="started";
+        char runing[]="started";
         printf("process started %d \n",table.Procsess[0].id);  
         strcpy(table.Procsess[0].state,runing);
+        table.Procsess[0].pid=pid;
+        WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
         runPro=1;
+        FinshtimePro=prvtime+table.Procsess[0].runningtime;
         }
         }
         else if(AlgorithmNmber==4)
         {
              sortpriority(&table);
-            PreemtiveHPF();
+             PreemtiveHPF();
         }
         
 
@@ -204,7 +247,7 @@ int main(int argc, char *argv[])
     if(procCount==TotalProcess&& table.count==0){break;}
     }
 
-   
+    Closefile();
     printf("scheduler is exiting..\n");
     destroyClk(true);
 }

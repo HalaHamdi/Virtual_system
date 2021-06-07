@@ -15,6 +15,25 @@ union Semun
     void *__pad;
 };
 
+void up(int sem)
+{
+    struct sembuf v_op;
+
+    v_op.sem_num = 0;
+    v_op.sem_op = 1;
+    v_op.sem_flg = !IPC_NOWAIT;
+
+    if (semop(sem, &v_op, 1) == -1)
+    {
+        perror("Error in up()");
+        exit(-1);
+    }
+
+    union Semun semun;
+    int VAL=semctl(sem, 0, GETVAL, semun);
+    //printf("semval after UUUP %d \n",VAL);
+}
+
 void down(int sem)
 {
     /*union Semun semun;
@@ -90,8 +109,24 @@ int main(int agrc, char *argv[])
         }
     }
 
+    key_t FinsgedrocessSem = 7788;
+    int semFinish = semget(FinsgedrocessSem, 1, 0666 | IPC_CREAT);
+
+    if (semFinish == -1)
+    {
+        perror("Error in create sem FinsgedrocessSem");
+        exit(-1);
+    }
+     semun.val = 0; 
+    if (semctl(semFinish, 0, SETVAL, semun) == -1)
+    {
+        perror("Error in semctl");
+        exit(-1);
+    }
+    
     destroyClk(false);
     printf("TRMINAT process with run time %d \n",atoi(runTime));
-    kill(getppid(), SIGUSR1);
+    //kill(getppid(), SIGUSR1);
+    up(semFinish);
     return 0;
 }
