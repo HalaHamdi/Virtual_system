@@ -124,6 +124,13 @@ int main(int argc, char *argv[])
         perror("Error in create sem");
         exit(-1);
     }
+    
+    semun.val = 0; /* initial value of the semaphore, Binary semaphore */
+    if (semctl(semSync, 0, SETVAL, semun) == -1)
+    {
+        perror("Error in semctl");
+        exit(-1);
+    }
 
     struct ProcessPCB Procsess;
     table.count=0;
