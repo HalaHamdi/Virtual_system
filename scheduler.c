@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
                         nextfit=GetNextfit(Procsess.memsize,&F,nextfit);
                         if(nextfit==-1)
                         {
-                            position=nextfit;
+                            nextfit=position;
                         }
                         else
                         {Procsess.from=F.Mem[nextfit].from;
