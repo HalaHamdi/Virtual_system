@@ -79,6 +79,7 @@ struct processData
 };
 struct PCB table;
 int runPro=0;
+
 bool generatorHasFinished = false;
 int pid=-1;
 
@@ -89,8 +90,12 @@ void  dealwithFinished()
     strcpy(table.Procsess[0].state,finished);
     printf("process Finished %d \n",table.Procsess[0].id);
     table.Procsess[0].remanningtime=0;
-    WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+    printf("okkkkkk\n");
+   // WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+    printf("done\n");
     Remove(&table);
+   
+    printf("table of count %d\n",table.count);
     runPro=0;
   
   /* signal( SIGUSR1, handler); */
@@ -265,8 +270,12 @@ int main(int argc, char *argv[])
             }
             else if(AlgorithmNmber==3)
             {
+             if(table.count!=0 && hasRecivedNow){
                 sortpriority(&table);
-                PreemtiveHPF();
+                  }
+                  if(table.count!=0)
+                  PreemtiveHPF();
+               
             }
             else if (AlgorithmNmber == 4){
                 if(currentProcessRemTime == 0){
@@ -380,7 +389,7 @@ int getRemTimeFromProcess(){
     }
 
     char remTimeString[10];
-    down(sem1);
+    // down(sem1);
     
     
     strcpy(remTimeString, (char *) shmaddr);
@@ -430,7 +439,7 @@ void sendtoprocess(int remTime){
     sprintf(text, "%d", remTime);  
     strcpy((char *) shmaddr,text);
     //memset(shmaddr,remTime,1);
-    up(sem1);
+     up(sem1);
     int VAL= semctl(sem1, 0, GETVAL, semun);
 
     //sem_getvalue(sem1, &VAL);
@@ -467,9 +476,19 @@ void attach_PCB()
 void PreemtiveHPF()
 {
     char remain[100];
-    // printf("HPF\n");
+     //printf("HPF\n");
+     if(runPro==1 && table.count>0)
+     {
+         printf("can hereeeeeeeeeeeeeee\n");
+         int time=getRemTimeFromProcess();
+         table.Procsess[getProcess(pid,&table)].remanningtime=time;
+         if(time==0)
+         {dealwithFinished();
+         runPro=0;
+         }
+     }
       
-   if(runPro==0)
+   if(runPro==0 && table.count>0)
     { 
         //printf("i am here\n");
           // check if no process is running now
@@ -490,7 +509,7 @@ void PreemtiveHPF()
       if(check)
       { 
         // change state to be running
-        char state[7]="running";
+        char state[7]="started";
         strcpy(table.Procsess[0].state,state);
         // tell the schuelder that he runs process now 
         runPro=1;
@@ -499,8 +518,8 @@ void PreemtiveHPF()
        // store copy of process " for get its  data  quickly if you will preeemtive it"
      
        // fork the process
-       printf("i will for\n");
-      int  pid=fork();
+       //printf("i will for\n");
+        pid=fork();
        printf("Process %d started\n",table.Procsess[0].id);
 
         if(pid==0)
@@ -520,22 +539,22 @@ void PreemtiveHPF()
         {  // store the pid of running process in scheulder
            printf("pid %d\n",pid);
             table.Procsess[0].pid=pid;
-              table.Run=table.Procsess[0];
+            table.Run=table.Procsess[0];
             
         }
       }
       // if the process was sleeping /stopped , wake up it again 
       else
       { runPro=1;
-            char state[7]="running";
+            char state[]="resume";
               table.Run=table.Procsess[0];
           strcpy(table.Procsess[0].state,state);
-          printf("Process %d Continue\n",table.Procsess[0].id);
+          printf("Process %d Continue\n",table.Procsess[0].remanningtime);
           printf("getpid %d\n",table.Procsess[0].pid);
           kill(table.Procsess[0].pid,SIGCONT);
       }
     }
-    else{
+    else if(table.count>0){
         // printf("checkks\n");
         // printf("Runpro %d \n",runPro);
       
@@ -549,43 +568,51 @@ void PreemtiveHPF()
         // get the index of current running process
         printf("pid  here %d\n",table.Run.pid);
         int index_running=getProcess(table.Run.pid,&table);
-
+        
         printf("indexof running  %d %d\n",table.Run.id,index_running);
+        
+        //printf("ok done Raghadddddddddddddddddddddddddd\n");
         // check if index not 0 which means there is a process has less prioirty of current
          // get the remaining time from current process which is runnging now
         //  if(index_running!=-1)
         // table.Procsess[index_running].remanningtime=atoi(remain);
           // try to preeemtive it if you can
           bool checkequals=false;
-        if(index_running!=0  && index_running!=-1 )
-        {
-            if(table.Procsess[0].priority==table.Procsess[index_running].priority)
-            {
-                if(table.Procsess[0].remanningtime<table.Procsess[index_running].remanningtime)
+        if(index_running!=0  )
+        { //printf("tmam okkkkkkkkkkkkk");
+            
+              if(table.Procsess[0].priority==table.Procsess[index_running].priority)
                 {
-                    checkequals=true;
+                    if(table.Procsess[0].remanningtime<table.Procsess[index_running].remanningtime)
+                    {
+                        checkequals=true;
+                    }
+                
                 }
-            }
-            else
-            {
-                   checkequals=true;
-            }
+                else
+                 checkequals=true;
+           
+            
             if(checkequals)
             {printf("i will stop\n");
             // change state of current process
+            
              char state[7]="stopped";
              strcpy(table.Procsess[index_running].state,state);
 
-             table.Procsess[index_running].remanningtime=atoi(remain);
+             
              printf("Process %d Stopped\n",table.Procsess[index_running].id);
              // send signal for process to stop it
              kill(table.Procsess[index_running].pid,SIGSTOP);
              // get the process which with less priority
+            
              struct ProcessPCB p=table.Procsess[0];
+
+            
              // chek if it running for fisrt time or not
              // all the same pervious steps
              bool check=false;
-        char stop[7]="stopped";
+        char stop[]="stopped";
         for(int i=0;i<7;i++)
         {
             if(table.Procsess[0].state[i]!=stop[i])
@@ -596,16 +623,18 @@ void PreemtiveHPF()
             
         }
             if(check)
-            {  char state[7]="running";
+            {  char state[]="started";
                 strcpy(table.Procsess[0].state,state);
             runPro=1;
+            // printf("before sending");
             sendtoprocess(table.Procsess[0].remanningtime);
+            // printf("sending\n");
        
-            int  pid=fork();
+              pid=fork();
 
                 if(pid==0)
                 {
-                    printf("Process %d started\n",table.Procsess[0].id);
+                    printf("Process %d started with time %d\n",table.Procsess[0].id,table.Procsess[0].remanningtime);
                 execl("./process.out","process.out",NULL);
                 }
                 else if(pid==-1)
@@ -624,15 +653,18 @@ void PreemtiveHPF()
             {
                 runPro=1;
                 table.Run=table.Procsess[0];
-                char state[7]="running";
-                 printf("Process %d Continue\n",table.Procsess[0].id);
+                char state[]="resume";
+                
+                printf("Process %d Continue\n",table.Procsess[0].remanningtime);
                 strcpy(table.Procsess[0].state,state);
                 kill(table.Procsess[0].pid,SIGCONT);
             }
             }
         }
+        
 
     }
+    // printf("i am outtttttttttttttttttttttttttttttttttttttttttttt hhhhhhhhhhhh\n");
       
        
 }

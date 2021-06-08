@@ -32,6 +32,7 @@ void Push(struct ProcessPCB p,struct PCB *Object)
    //printf("ooh");
    
    Object->Procsess[Object->count++]=p;
+   printf("count from push %d\n ",Object->count);
     //printf("done");
 }
 void POP(struct PCB *Object)
@@ -43,7 +44,7 @@ void POP(struct PCB *Object)
     Object->Procsess[Object->count].id=-1;
     Object->Procsess[Object->count].pid=-1;
     // Object.Procsess[Object.count].state[0]='      ';
-    Object->count--;
+     Object->count=Object->count-1;
 
 }
 void Remove(struct PCB *Object)
@@ -58,7 +59,8 @@ void Remove(struct PCB *Object)
     Object->Procsess[Object->count-1].remanningtime=-1;
     Object->Procsess[Object->count-1].id=-1;
     Object->Procsess[Object->count-1].pid=-1;
-    Object->count--;
+    Object->count=Object->count-1;
+    printf("count from remove %d\n",Object->count);
 
 }
 void Removeone(int pid,struct PCB *Object)

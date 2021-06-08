@@ -123,9 +123,9 @@ int main(int agrc, char *argv[])
                 int VAL= semctl(sem1, 0, GETVAL, semun);
                 printf("semval after UUUP in function %d \n",VAL);
                 //if wasn't a zero, then it's already upped , no need to up it twice
-                if(VAL == 0){
-                    up(sem1);
-                }
+                // if(VAL == 0){
+                //     up(sem1);
+                // }
             }
         }
         
