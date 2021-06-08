@@ -54,15 +54,8 @@ void down(int sem)
     if (semop(sem, &p_op, 1) == -1)
     {
         perror("Sch: Error in down()");
-        if(errno == EINTR){
-            //A signal was sent from the generator to the scheduler
-            //This signal notifies that the generator has finished
-            //however it was sent while the scheduler was waiting on the remaining time semaphore
-            //and it was inturrupted while it was down
-            printf("Sch: errno == EINTR");
-            //To handle this, try again to down
-            semop(sem, &p_op, 1);
-        }
+        exit(-1);
+        
     }
 
     
