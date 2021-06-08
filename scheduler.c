@@ -179,6 +179,7 @@ int main(int argc, char *argv[])
         exit(-1);
     }
     struct Freeblocks F;
+    F.count = 0;
     struct Free Block;
     Block.from=0;
     Block.to=1024;
@@ -263,6 +264,7 @@ int main(int argc, char *argv[])
 
                     else if (memAlg == 3){
                         printf("In memAlg 3 /n");
+                        printFreeSpace(&F);
                         struct Free getblock=GetBestFit(Procsess.memsize,&F);
                         if(getblock.space!=0){
                             Procsess.from=getblock.from;
