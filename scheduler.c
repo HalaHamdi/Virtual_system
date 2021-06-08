@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
     int AlgorithmNmber=p.processinfo[1];
     int quantum=p.processinfo[2];
     int memAlg=p.processinfo[3];
-    printf("num of process from Scheudler %d \n",TotalProcess);
+    printf("num of process from Scheudler %d  and mem Algo %d \n",TotalProcess,memAlg);
     struct processData  processArray[TotalProcess];
 
 
@@ -216,9 +216,10 @@ int main(int argc, char *argv[])
             
             //Recieving new arrived processes if found 
             while(true){
+                //printf("check for recievness %d \n",prvtime);
                 rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
                 if(rec_val == -1)
-                {     // perror("Errror in rec"); 
+                {      perror("Errror in recccccccccccc"); 
                     break;
                 }
                 else{

@@ -228,6 +228,7 @@ void storeProcessData(struct processData processArray[],FILE *fp,int Totallines)
     //store the processes 
     for(int i=0;i<Totallines-1;i++){
         struct processData p;
+        p.mtype=1;
         fscanf(fp,"%d",&p.processinfo[0]);
         fscanf(fp,"%d",&p.processinfo[1]);
         fscanf(fp,"%d",&p.processinfo[2]);
