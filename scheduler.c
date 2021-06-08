@@ -236,8 +236,9 @@ void CallGetNextFit()
                           if(Procsesswait.Procsess[0].to-Procsesswait.Procsess[0].from!=F.Mem[nextfit].space)
                           {
                               F.Mem[nextfit].from=Procsesswait.Procsess[0].to;
-                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
-                               insertSpace(F.Mem[nextfit], &F);
+                              F.Mem[nextfit].space=F.Mem[nextfit].to-F.Mem[nextfit].from;
+                               insertStart(F.Mem[nextfit], &F);
+                               Marge(&F);
 
                           }
                           Procsesswait.Procsess[0].inmemory=true;
@@ -433,8 +434,9 @@ int main(int argc, char *argv[])
                           if(Procsess.to-Procsess.from!=F.Mem[nextfit].space)
                           {
                               F.Mem[nextfit].from=Procsess.to;
-                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
-                               insertSpace(F.Mem[nextfit], &F);
+                              F.Mem[nextfit].space=F.Mem[nextfit].to-F.Mem[nextfit].from;
+                               insertStart(F.Mem[nextfit], &F);
+                              
 
                           }
                           Procsess.inmemory=true;
