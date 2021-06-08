@@ -1,5 +1,5 @@
 #include <stdio.h>
-#define MAX_SIZE 1024
+#define MAX_SIZE_MEM 1024
 // struct PCB *Object,value;
 
 struct Free
@@ -12,7 +12,7 @@ struct Free
 };
 struct Freeblocks
 {
-   struct Free Mem[MAX_SIZE];
+   struct Free Mem[MAX_SIZE_MEM];
    int count;
 };
 
@@ -37,8 +37,8 @@ void insertStart(struct Free F,struct Freeblocks *Object){
     Object->count++;
 
 }
-Free GitFristFit(int space,struct Freeblocks *Object){
-    Free fristblock;
+struct Free GitFristFit(int space,struct Freeblocks *Object){
+    struct Free fristblock;
     fristblock.space=0;
     for(int i=0;i<Object->count;i++){
         if(Object->Mem[i].space>=space){
@@ -52,7 +52,7 @@ Free GitFristFit(int space,struct Freeblocks *Object){
     return fristblock;
 }
 //remove from the frist
-void Remove(struct Freeblocks *Object)
+void RemoveMEM(struct Freeblocks *Object)
 {
     for(int i=0;i<Object->count;i++)
     {

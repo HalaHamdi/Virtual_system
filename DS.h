@@ -14,7 +14,9 @@ struct ProcessPCB
     int pid;
     char state[10];
     int memsize;
-    bool inmemory
+    int from;
+    int to;
+    bool inmemory;
 
 };
 struct PCB

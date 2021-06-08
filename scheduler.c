@@ -1,12 +1,13 @@
 #include "headers.h"
 #include"DS.h"
 #include"string.h"
+#include "MEM.h"
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include "MEM.h"
+
 
 union Semun
 {
@@ -76,7 +77,7 @@ void WritetoFile(int id,char *state,int arr,int total,int remaining,int wait){
 struct processData
 {
     long mtype;
-    int processinfo[4];
+    int processinfo[5];
 };
 struct PCB table;
  struct PCB Procsesswait;
@@ -233,6 +234,23 @@ int main(int argc, char *argv[])
                     Procsess.wait=0;
                     Procsess.inmemory=false;
                     strcpy(Procsess.state,State);
+                    //Memory
+                    if(memAlg==1){
+                    printf("IIn memAlg 1 /n");
+                    struct Free getblock=GitFristFit(Procsess.memsize,&F);
+                    if(getblock.space!=0){
+                    Procsess.from=getblock.from;
+                    Procsess.to=getblock.from+Procsess.memsize;
+                    if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
+                     getblock.from=Procsess.to;
+                     getblock.space=getblock.from-getblock.to;
+                    }
+                    Procsess.inmemory=true; 
+                    printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+                    }
+                    }
+
+                    if(Procsess.inmemory){
                     if(AlgorithmNmber == 4){
                         InsertSortedByRemainTime(Procsess, &table);
                     }
@@ -240,6 +258,9 @@ int main(int argc, char *argv[])
                         Push(Procsess,&table);
                     }
                     procCount++;
+                    }else{
+                      Push(Procsess,&Procsesswait);
+                    }
                     /////////////////////////////////here we will try to alocate process in memoy if not alcated put it in waitList and pop from table
                 }    
             }
