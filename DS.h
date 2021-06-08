@@ -50,8 +50,9 @@ void POP(struct PCB *Object)
     Object->count--;
 
 }
-void Remove(struct PCB *Object)
+struct ProcessPCB Remove(struct PCB *Object)
 {
+    struct ProcessPCB P=Object->Procsess[0];
     for(int i=0;i<Object->count;i++)
     {
         Object->Procsess[i]=Object->Procsess[i+1];
@@ -63,6 +64,7 @@ void Remove(struct PCB *Object)
     Object->Procsess[Object->count-1].id=-1;
     Object->Procsess[Object->count-1].pid=-1;
     Object->count--;
+    return P;
 
 }
 

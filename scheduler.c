@@ -100,9 +100,33 @@ int nextfit=0;
 int procCount=0;
 int memAlg;
 int AlgorithmNmber = -1;
+int procCount;
 
 void memAlg1(){
-    
+    int len=Procsesswait.count;
+  for(int i=0;i<len;i++){
+
+    printf("IIn memAlg 1 from functionAlg1 \n");
+    printFreeSpace(&F);
+    struct ProcessPCB waitP=Remove(&Procsesswait);
+    struct Free getblock=GitFristFit(waitP.memsize,&F);
+    if(getblock.space!=0){
+    waitP.from=getblock.from;
+    waitP.to=getblock.from+waitP.memsize;
+    if(waitP.to-waitP.from!=getblock.space){   //we have external fragmentation need to pushed
+    getblock.from=waitP.to;
+    getblock.space=waitP.to-waitP.from;
+    insertStart(getblock,&F);
+     }
+    waitP.inmemory=true; 
+    Push(waitP,&table);
+    procCount++;
+    printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",waitP.id,waitP.from,waitP.to,waitP.memsize);
+    }else{
+     Push(waitP,&Procsesswait);
+     printf("still not have place for it");
+    }
+  }
 }
 
 bool tryToAllocate_BestFit(struct ProcessPCB* p){
@@ -141,13 +165,12 @@ void  dealwithFinished()
     Pblock.from=table.Procsess[0].from;
     Pblock.to=table.Procsess[0].to;
     Pblock.space=table.Procsess[0].memsize;
-
-    if(memAlg==1){
     insertStart(Pblock,&F);
     Marge(&F);
-    if(Procsesswait.count>0){
+    if(Procsesswait.count>0){   //if process in wait List
+
+    if(memAlg==1){
         memAlg1();
-    }
     }else if(memAlg==2){
         insertSpace(Pblock,&F);
         CallGetNextFit();
@@ -180,6 +203,7 @@ void  dealwithFinished()
             }
         }
     }
+   }
     Remove(&table);
     runPro=0;
   /* signal( SIGUSR1, handler); */
@@ -294,6 +318,7 @@ int main(int argc, char *argv[])
     struct ProcessPCB Procsess;
     table.count=0;
     Procsesswait.count=0;
+
     procCount=0;
     char State[]="waiting";
     char stoppedState[] = "stopped";
@@ -329,13 +354,17 @@ int main(int argc, char *argv[])
                 down(semSync);
                 printf("check for recievness %d \n",prvtime);
             }
+             if(FinshtimePro==prvtime){  //there is processes should be terminate
+                    down(semFinish);
+                    dealwithFinished(&F);
+             }
             
             //Recieving new arrived processes if found 
             while(true){
                 //printf("check for recievness %d \n",prvtime);
                 rec_val =rec_val=msgrcv(msgq_id,&p,sizeof(p.processinfo),0,IPC_NOWAIT);
                 if(rec_val == -1)
-                {      perror("Errror in recccccccccccc"); 
+                {     // perror("Errror in recccccccccccc"); 
                     break;
                 }
                 else{
@@ -354,20 +383,19 @@ int main(int argc, char *argv[])
                     strcpy(Procsess.state,State);
                     //Memory
                     if(memAlg==1){
-                    printf("IIn memAlg 1 /n");
+                    printf("IIn memAlg 1 \n");
+                    printFreeSpace(&F);
                     struct Free getblock=GitFristFit(Procsess.memsize,&F);
                     if(getblock.space!=0){
                     Procsess.from=getblock.from;
                     Procsess.to=getblock.from+Procsess.memsize;
                     if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
                      getblock.from=Procsess.to;
-                     getblock.space=getblock.from-getblock.to;
+                     getblock.space=getblock.to-getblock.from;
                      insertStart(getblock,&F);
                     }
                     Procsess.inmemory=true; 
-                    printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
-                    }else{
-                        Procsess.inmemory=false;
+                    printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
                     }
                     }
 
@@ -425,10 +453,6 @@ int main(int argc, char *argv[])
 
             //Redirecting
             if(AlgorithmNmber==2 || AlgorithmNmber==1){
-                if(FinshtimePro==prvtime){  //there is processes should be terminate
-                    down(semFinish);
-                    dealwithFinished(&F);
-                }
 
                 if(table.count!=0 && runPro==0){
                     if(AlgorithmNmber==2){    
