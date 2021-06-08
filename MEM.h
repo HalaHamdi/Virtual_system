@@ -37,6 +37,47 @@ void insertStart(struct Free F,struct Freeblocks *Object){
     Object->count++;
 
 }
+Free GitFristFit(int space,struct Freeblocks *Object){
+    Free fristblock;
+    fristblock.space=0;
+    for(int i=0;i<Object->count;i++){
+        if(Object->Mem[i].space>=space){
+            fristblock=Object->Mem[i];
+            for(int j=i+1;i<Object->count-1;j++){
+                Object->Mem[j]=Object->Mem[j+1];
+            }
+            Object->count--;
+        }
+    }
+    return fristblock;
+}
+//remove from the frist
+void Remove(struct Freeblocks *Object)
+{
+    for(int i=0;i<Object->count;i++)
+    {
+        Object->Mem[i]=Object->Mem[i+1];
+    }
+    Object->Mem[Object->count-1].from=-1;
+    Object->Mem[Object->count-1].to=-1;
+    Object->Mem[Object->count-1].space=-1;
+    Object->count--;
+
+}
+//for inserted Start
+void Marge(struct Freeblocks *Object){
+    for(int i=0;i<Object->count-1;i++){
+        if(Object->Mem[i].to==Object->Mem[i+1].from){
+            Object->Mem[i].to=Object->Mem[i+1].from;
+            Object->Mem[i].space+=Object->Mem[i+1].space;
+            for(int j=i+1;j<Object->count-1;j++){
+                Object->Mem[j]= Object->Mem[j+1];
+            }
+            Object->count--;
+        }
+    }
+
+}
 
 void insertSpace(struct Free F,struct Freeblocks *Object){
     int i=0;

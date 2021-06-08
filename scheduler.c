@@ -6,6 +6,7 @@
 #include <sys/sem.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include "MEM.h"
 
 union Semun
 {
@@ -78,6 +79,7 @@ struct processData
     int processinfo[4];
 };
 struct PCB table;
+ struct PCB Procsesswait;
 int runPro=0;
 bool generatorHasFinished = false;
 int pid=-1;
@@ -165,10 +167,15 @@ int main(int argc, char *argv[])
         perror("Error in semctl");
         exit(-1);
     }
-
-
+    struct Freeblocks F;
+    struct Free Block;
+    Block.from=0;
+    Block.to=1024;
+    Block.space=1024;
+    insertStart(Block,&F);
     struct ProcessPCB Procsess;
     table.count=0;
+    Procsesswait.count=0;
     int procCount=0;
     char State[]="waiting";
     char stoppedState[] = "stopped";
@@ -224,6 +231,7 @@ int main(int argc, char *argv[])
                     Procsess.remanningtime=p.processinfo[2];
                     Procsess.memsize=p.processinfo[4];
                     Procsess.wait=0;
+                    Procsess.inmemory=false;
                     strcpy(Procsess.state,State);
                     if(AlgorithmNmber == 4){
                         InsertSortedByRemainTime(Procsess, &table);
@@ -232,6 +240,7 @@ int main(int argc, char *argv[])
                         Push(Procsess,&table);
                     }
                     procCount++;
+                    /////////////////////////////////here we will try to alocate process in memoy if not alcated put it in waitList and pop from table
                 }    
             }
             printf("table count %d\n",table.count);
