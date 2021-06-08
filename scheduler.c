@@ -79,13 +79,14 @@ struct processData
     long mtype;
     int processinfo[5];
 };
+
 struct PCB table;
  struct PCB Procsesswait;
 int runPro=0;
 bool generatorHasFinished = false;
 int pid=-1;
 
-void  dealwithFinished()
+void  dealwithFinished(struct Freeblocks * F)
 {
     //printf("My Pid is [%d], and i have got signal #%d\n",getpid(), signum);
     char finished[]="finished";  
@@ -93,9 +94,17 @@ void  dealwithFinished()
     printf("process Finished %d \n",table.Procsess[0].id);
     table.Procsess[0].remanningtime=0;
     WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+    
+    //Inserted the fred space after this process has finished
+    struct Free deallocatedSpace;
+    deallocatedSpace.from = table.Procsess[0].from;
+    deallocatedSpace.to = table.Procsess[0].to;
+    deallocatedSpace.space = table.Procsess[0].memsize;
+    insertSpace(deallocatedSpace,F);
+    Marge(F);
+
     Remove(&table);
     runPro=0;
-  
   /* signal( SIGUSR1, handler); */
 }
 
@@ -237,18 +246,34 @@ int main(int argc, char *argv[])
                     strcpy(Procsess.state,State);
                     //Memory
                     if(memAlg==1){
-                    printf("IIn memAlg 1 /n");
-                    struct Free getblock=GitFristFit(Procsess.memsize,&F);
-                    if(getblock.space!=0){
-                    Procsess.from=getblock.from;
-                    Procsess.to=getblock.from+Procsess.memsize;
-                    if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
-                     getblock.from=Procsess.to;
-                     getblock.space=getblock.from-getblock.to;
+                        printf("IIn memAlg 1 /n");
+                        struct Free getblock=GitFristFit(Procsess.memsize,&F);
+                        if(getblock.space!=0){
+                        Procsess.from=getblock.from;
+                        Procsess.to=getblock.from+Procsess.memsize;
+                        if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
+                        getblock.from=Procsess.to;
+                        getblock.space=getblock.from-getblock.to;
+                        }
+                        Procsess.inmemory=true; 
+                        printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+                        }
                     }
-                    Procsess.inmemory=true; 
-                    printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
-                    }
+                    else if (memAlg == 3){
+                        printf("In memAlg 3 /n");
+                        struct Free getblock=GetBestFit(Procsess.memsize,&F);
+                        if(getblock.space!=0){
+                            Procsess.from=getblock.from;
+                            Procsess.to=getblock.from+Procsess.memsize;
+                            if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
+                                getblock.from=Procsess.to;
+                                getblock.space=getblock.from-getblock.to;
+                                insertSpace(getblock, &F);
+                            }
+                            Procsess.inmemory=true; 
+                            printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+                        }                        
+
                     }
 
                     if(Procsess.inmemory){
@@ -271,7 +296,7 @@ int main(int argc, char *argv[])
             if(AlgorithmNmber==2 || AlgorithmNmber==1){
                 if(FinshtimePro==prvtime){  //there is processes should be terminate
                     down(semFinish);
-                    dealwithFinished();
+                    dealwithFinished(&F);
                 }
 
                 if(table.count!=0 && runPro==0){
@@ -302,8 +327,8 @@ int main(int argc, char *argv[])
                 PreemtiveHPF();
             }
             else if (AlgorithmNmber == 4){
-                if(currentProcessRemTime == 0){
-                    dealwithFinished();
+                if( runPro != 0 && currentProcessRemTime == 0){
+                    dealwithFinished(&F);
                 }
                 
                 //if a new process has arrived go compare it with the currently running

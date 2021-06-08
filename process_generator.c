@@ -2,6 +2,7 @@
 #include<string.h>
 #include <sys/sem.h>
 
+
 int msgq_id;
 
 struct processData
@@ -135,7 +136,6 @@ int main(int argc, char *argv[])
         
         if(prvTime !=  getClk()){
             printf("current time from generator %d \n",getClk());
-                
             while(getClk()>=processArray[counter].processinfo[1] && counter<Totallines-1){
                 printf("Gen: new process arrived %d \n",getClk());
                 int send_val=msgsnd(msgq_id,&processArray[counter],sizeof(processArray[counter].processinfo),!IPC_NOWAIT);
@@ -224,7 +224,7 @@ void storeProcessData(struct processData processArray[],FILE *fp,int Totallines)
     fseek(fp, 0, SEEK_SET);
     char word[20];
     //skip the first line 
-    for(int i=0;i<4;i++){fscanf(fp,"%s",word);}
+    for(int i=0;i<5;i++){fscanf(fp,"%s",word);}
     //store the processes 
     for(int i=0;i<Totallines-1;i++){
         struct processData p;
