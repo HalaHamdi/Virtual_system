@@ -97,10 +97,33 @@ int runPro=0;
 bool generatorHasFinished = false;
 int pid=-1;
 int nextfit=0;
+int procCount=0;
 int memAlg;
+int AlgorithmNmber = -1;
 
 void memAlg1(){
     
+}
+
+bool tryToAllocate_BestFit(struct ProcessPCB* p){
+    struct Free getblock=GetBestFit(p->memsize,&F);
+    if(getblock.space!=0){
+        p->from = getblock.from;
+        p->to = getblock.from + p->memsize;
+        if(p->to - p->from != getblock.space){   //we have external fragmentation need to pushed
+            getblock.from=p->to;
+            getblock.space=getblock.to-getblock.from;
+            insertStart(getblock, &F);
+        }
+        p->inmemory=true; 
+        printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",p->id,p->from,p->to,p->memsize);
+    }
+    else{
+        p->inmemory=false;
+    }
+
+    //if was allocated will return true, if wasn't will return false
+    return p->inmemory;
 }
 
 void  dealwithFinished()
@@ -130,8 +153,32 @@ void  dealwithFinished()
         CallGetNextFit();
 
     }else if(memAlg==3){
+        printf("Before deAllocating\n");
+        printFreeSpace(&F);
+        
         //Inserted the fred space after this process has finished
-        insertSpace(Pblock,&F);
+        insertStart(Pblock,&F);
+        Marge(&F);
+        
+        printf("After deAllocating\n");
+        printFreeSpace(&F);
+
+        for(int i=0; i < Procsesswait.count; i++){
+            bool isAllocated = tryToAllocate_BestFit(&Procsesswait.Procsess[i]);
+            if(isAllocated){
+                struct ProcessPCB p = Procsesswait.Procsess[i];
+                //Remove that process from the Processwait PCB
+                removeByIndex(i,&Procsesswait);
+                if(AlgorithmNmber == 4){
+                    InsertSortedByRemainTime(p, &table);
+                }
+                else{
+                    Push(p,&table);
+                }
+                printf("inserted in table\n");
+                procCount++;                    
+            }
+        }
     }
     Remove(&table);
     runPro=0;
@@ -201,7 +248,7 @@ int main(int argc, char *argv[])
         perror("Errror in rec");
 
     int TotalProcess=p.processinfo[0];
-    int AlgorithmNmber=p.processinfo[1];
+    AlgorithmNmber=p.processinfo[1];
     int quantum=p.processinfo[2];
     memAlg=p.processinfo[3];
     printf("num of process from Scheudler %d  and mem Algo %d \n",TotalProcess,memAlg);
@@ -247,7 +294,7 @@ int main(int argc, char *argv[])
     struct ProcessPCB Procsess;
     table.count=0;
     Procsesswait.count=0;
-    int procCount=0;
+    procCount=0;
     char State[]="waiting";
     char stoppedState[] = "stopped";
     int FinshtimePro=-1; //Finishtrime for the runing process if it is nonPreemptive
@@ -327,19 +374,7 @@ int main(int argc, char *argv[])
                     else if (memAlg == 3){
                         printf("In memAlg 3 \n");
                         printFreeSpace(&F);
-                        struct Free getblock=GetBestFit(Procsess.memsize,&F);
-                        if(getblock.space!=0){
-                            Procsess.from=getblock.from;
-                            Procsess.to=getblock.from+Procsess.memsize;
-                            if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
-                                getblock.from=Procsess.to;
-                                getblock.space=getblock.to-getblock.from;
-                                printf("getblock.from=%d \ngetblock.to=%d \ngetblock.space=%d \n",getblock.from,getblock.to,getblock.space);
-                                insertSpace(getblock, &F);
-                            }
-                            Procsess.inmemory=true; 
-                            printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
-                        } 
+                        tryToAllocate_BestFit(&Procsess); 
                         printFreeSpace(&F);                       
 
                     }  
