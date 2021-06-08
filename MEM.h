@@ -16,6 +16,10 @@ struct Freeblocks
    int count;
 };
 
+void printOneSpace(struct Free block){
+    printf("from %d To %d a space of %d\n",block.from,block.to,block.space);
+}
+
 void push(struct Free F,struct Freeblocks *Object){
     Object->Mem[Object->count++]=F;
 }
@@ -32,7 +36,7 @@ void insertStart(struct Free F,struct Freeblocks *Object){
             break;
         }
     }
-    if(i=-1){
+    if(i==-1){
       Object->Mem[i+1]=F;
     }
     //Object->Mem[i]=F;
@@ -109,6 +113,7 @@ void Marge(struct Freeblocks *Object){
 //place it in the correct sorted size postion
 void insertSpace(struct Free F,struct Freeblocks *Object){
     int i=0;
+    printf("Object->count-1 = %d\n",Object->count-1);
     for(i=Object->count-1;i>=0;i--){
         if(Object->Mem[i].space>F.space){
            Object->Mem[i+1]=Object->Mem[i];
@@ -117,10 +122,11 @@ void insertSpace(struct Free F,struct Freeblocks *Object){
             break;
         }
     }
-    if(i==0){
+    if(i==-1){
       Object->Mem[i]=F;
     }
     Object->count++;
+    printOneSpace(Object->Mem[i]);
 }
 
 struct Free GetBestFit(int space,struct Freeblocks *Object){
@@ -148,6 +154,8 @@ struct Free GetBestFit(int space,struct Freeblocks *Object){
 
 void printFreeSpace(struct Freeblocks *Object){
     for(int i=0;i<Object->count;i++){
-        printf( "from %d To %d a space of %d\n",Object->Mem[i].from,Object->Mem[i].to,Object->Mem[i].space);        
+        printOneSpace(Object->Mem[i]);        
     }
 }
+
+
