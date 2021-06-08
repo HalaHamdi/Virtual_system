@@ -24,6 +24,14 @@ void push(struct Free F,struct Freeblocks *Object){
     Object->Mem[Object->count++]=F;
 }
 
+void printFreeSpace(struct Freeblocks *Object){
+    for(int i=0;i<Object->count;i++){
+        printOneSpace(Object->Mem[i]);        
+    }
+}
+
+
+
 //Return the memory back to the free memory DS
 //place it in the correct sorted address postion
 void insertStart(struct Free F,struct Freeblocks *Object){
@@ -123,10 +131,10 @@ void insertSpace(struct Free F,struct Freeblocks *Object){
         }
     }
     if(i==-1){
+      i++;
       Object->Mem[i]=F;
     }
     Object->count++;
-    printOneSpace(Object->Mem[i]);
 }
 
 struct Free GetBestFit(int space,struct Freeblocks *Object){
@@ -151,11 +159,3 @@ struct Free GetBestFit(int space,struct Freeblocks *Object){
 
     return bestblock;
 }
-
-void printFreeSpace(struct Freeblocks *Object){
-    for(int i=0;i<Object->count;i++){
-        printOneSpace(Object->Mem[i]);        
-    }
-}
-
-
