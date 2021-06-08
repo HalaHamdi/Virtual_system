@@ -7,7 +7,9 @@
 #include <sys/sem.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <errno.h>
 
+extern int errno;
 
 union Semun
 {
@@ -52,7 +54,15 @@ void down(int sem)
     if (semop(sem, &p_op, 1) == -1)
     {
         perror("Sch: Error in down()");
-        exit(-1);
+        if(errno == EINTR){
+            //A signal was sent from the generator to the scheduler
+            //This signal notifies that the generator has finished
+            //however it was sent while the scheduler was waiting on the remaining time semaphore
+            //and it was inturrupted while it was down
+            printf("Sch: errno == EINTR");
+            //To handle this, try again to down
+            semop(sem, &p_op, 1);
+        }
     }
 
     
@@ -118,8 +128,8 @@ void  dealwithFinished()
     }else if(memAlg==2){
 
     }else if(memAlg==3){
-    //Inserted the fred space after this process has finished
-    insertSpace(Pblock,&F);
+        //Inserted the fred space after this process has finished
+        insertSpace(Pblock,&F);
     }
     Remove(&table);
     runPro=0;
