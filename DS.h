@@ -82,6 +82,10 @@ void Removeone(int pid,struct PCB *Object)
         }
         POP(Object);
     }
+   for(int i=0;i<Object->count;i++)
+    {
+        printf("id = %d in PINTPCB \n",Object->Procsess[i].id);
+    }
 
 }
 
@@ -205,7 +209,7 @@ void PrintPCB(struct PCB *Object)
 {
     for(int i=0;i<Object->count;i++)
     {
-        printf("ahhhh %d %d",Object->Procsess[i].arrivaltime,Object->Procsess[i].runningtime);
+        printf("id = %d in PINTPCB \n",Object->Procsess[i].id);
     }
 }
 
