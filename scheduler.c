@@ -84,7 +84,7 @@ fclose (MEMf);
 }
 void WritetoMEMf(int id,int space,int from,int to){
    
-        fprintf(fp,"At time %d allocated %d bytes for process %d from %d to %d \n",getClk(),space,from,to);
+        fprintf(fp,"At time %d allocated %d bytes for process %d from %d to %d \n",getClk(),id,space,from,to);
     
 }
 
