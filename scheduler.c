@@ -297,6 +297,7 @@ int main(int argc, char *argv[])
                           {
                               F.Mem[nextfit].from=Procsess.to;
                               F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
+                               insertSpace(F.Mem[nextfit], &F);
 
                           }
                           Procsess.inmemory=true;
