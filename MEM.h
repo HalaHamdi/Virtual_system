@@ -51,6 +51,28 @@ struct Free GitFristFit(int space,struct Freeblocks *Object){
     }
     return fristblock;
 }
+int GetNextfit(int space, struct Freeblocks *Object,int nextfit)
+{
+    int position=nextfit;
+  for(int i=nextfit;i<Object->count;i++)
+    {
+           if(Object->Mem[i].space>=space)
+           {
+             
+               return i;
+           }  
+    }
+    if(nextfit==Object->count)
+    {
+      for(int i=0;i<position;i++)
+      {
+          if(Object->Mem[i].space>=space)
+          return i;
+      }
+    }
+    return -1;
+
+}
 //remove from the frist
 void RemoveMEM(struct Freeblocks *Object)
 {

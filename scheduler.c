@@ -84,6 +84,7 @@ struct PCB table;
 int runPro=0;
 bool generatorHasFinished = false;
 int pid=-1;
+int nextfit=0;
 
 void  dealwithFinished()
 {
@@ -248,7 +249,33 @@ int main(int argc, char *argv[])
                     Procsess.inmemory=true; 
                     printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
                     }
-                    }
+                    }  
+                    else if(memAlg==2)
+                    {
+                        // next fit;
+                        int position=nextfit;
+                        nextfit=GetNextfit(Procsess.memsize,&F,nextfit);
+                        if(nextfit==-1)
+                        {
+                            position=nextfit;
+                        }
+                        else
+                        {Procsess.from=F.Mem[nextfit].from;
+                          Procsess.to=F.Mem[nextfit].from+Procsess.memsize;
+                          if(Procsess.to-Procsess.from!=F.Mem[nextfit].space)
+                          {
+                              F.Mem[nextfit].from=Procsess.to;
+                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
+
+                          }
+                          Procsess.inmemory=true;
+                        printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+
+
+                        }
+
+
+                    }  
 
                     if(Procsess.inmemory){
                     if(AlgorithmNmber == 4){
