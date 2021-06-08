@@ -117,9 +117,10 @@ void insertSpace(struct Free F,struct Freeblocks *Object){
             break;
         }
     }
-    if(i=0){
+    if(i==0){
       Object->Mem[i]=F;
     }
+    Object->count++;
 }
 
 struct Free GetBestFit(int space,struct Freeblocks *Object){

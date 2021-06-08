@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
                     }
 
                     else if (memAlg == 3){
-                        printf("In memAlg 3 /n");
+                        printf("In memAlg 3 \n");
                         printFreeSpace(&F);
                         struct Free getblock=GetBestFit(Procsess.memsize,&F);
                         if(getblock.space!=0){
@@ -271,12 +271,14 @@ int main(int argc, char *argv[])
                             Procsess.to=getblock.from+Procsess.memsize;
                             if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
                                 getblock.from=Procsess.to;
-                                getblock.space=getblock.from-getblock.to;
+                                getblock.space=getblock.to-getblock.from;
+                                printf("getblock.from=%d \ngetblock.to=%d \ngetblock.space=%d \n",getblock.from,getblock.to,getblock.space);
                                 insertSpace(getblock, &F);
                             }
                             Procsess.inmemory=true; 
-                            printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
-                        }                        
+                            printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+                        } 
+                        printFreeSpace(&F);                       
 
                     }  
                     else if(memAlg==2)
