@@ -87,8 +87,9 @@ int runPro=0;
 bool generatorHasFinished = false;
 int pid=-1;
 int nextfit=0;
+int memAlg;
 
-void memAlg(){
+void memAlg1(){
     
 }
 
@@ -159,7 +160,7 @@ int main(int argc, char *argv[])
     int TotalProcess=p.processinfo[0];
     int AlgorithmNmber=p.processinfo[1];
     int quantum=p.processinfo[2];
-    int memAlg=p.processinfo[3];
+    memAlg=p.processinfo[3];
     printf("num of process from Scheudler %d  and mem Algo %d \n",TotalProcess,memAlg);
     struct processData  processArray[TotalProcess];
 
