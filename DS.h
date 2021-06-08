@@ -67,6 +67,14 @@ struct ProcessPCB Remove(struct PCB *Object)
     return P;
 
 }
+
+void removeByIndex(int i, struct PCB *theTable){
+    for(int j = i; j < theTable->count; j++){
+        theTable->Procsess[j] = theTable->Procsess[j+1]; 
+    }
+    POP(theTable);
+}
+
 void Removeone(int pid,struct PCB *Object)
 {
     int index=-1;
@@ -80,11 +88,7 @@ void Removeone(int pid,struct PCB *Object)
     }
     if(index!=-1)
     { 
-        for(int i=index;i<Object->count;i++)
-        {
-            Object->Procsess[i]=Object->Procsess[i+1];
-        }
-        POP(Object);
+        removeByIndex(index,Object);
     }
 
 }
@@ -95,6 +99,7 @@ void shiftStartingFrom(int start, struct PCB *theTable){
     }
     theTable->count++;
 }
+
 
 //Assuming the PCBTable is already sorted
 //Insert in it this new Process entry in its correct sorted relative position

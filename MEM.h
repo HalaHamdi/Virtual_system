@@ -111,6 +111,8 @@ void Marge(struct Freeblocks *Object){
                 Object->Mem[j]= Object->Mem[j+1];
             }
             Object->count--;
+            //to check again for that free space after merging, whether there's another merge next or not
+            i--;
         }
     }
 
