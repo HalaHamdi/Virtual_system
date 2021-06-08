@@ -18,7 +18,7 @@ union Semun
     void *__pad;
 };
 void PreemtiveHPF();
-
+void CallGetNextFit();
 void up(int sem)
 {
     struct sembuf v_op;
@@ -135,7 +135,7 @@ void CallGetNextFit()
 {
     if(Procsesswait.count>0)
      { int position=nextfit;
-                        nextfit=GetNextfit(Procsesswait.Procsess[0].memsize,&Procsesswait,nextfit);
+                        nextfit=GetNextfit(Procsesswait.Procsess[0].memsize,&F,nextfit);
                         if(nextfit==-1)
                         {
                             nextfit=position;
@@ -357,6 +357,7 @@ int main(int argc, char *argv[])
 
 
                         }
+                         printFreeSpace(&F);       
                     }  
 
                     if(Procsess.inmemory){
