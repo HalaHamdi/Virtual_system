@@ -65,10 +65,9 @@ fclose (fp);
 }
 
 void WritetoFile(int id,char *state,int arr,int total,int remaining,int wait){
-    if(state!="finished"){
-        fprintf(fp,"At time %d process %d %s arr %d total %d remain %d wait %d \n",getClk(),id,state,arr,total,remaining,wait);
-    }
-
+    //if(strcmp(state,"finished") != 0){
+    fprintf(fp,"At time %d process %d %s arr %d total %d remain %d wait %d \n",getClk(),id,state,arr,total,remaining,wait);
+    //}
 }
 
 
@@ -91,7 +90,7 @@ void  dealwithFinished()
     printf("process Finished %d \n",table.Procsess[0].id);
     table.Procsess[0].remanningtime=0;
     printf("okkkkkk\n");
-   // WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+    WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
     printf("done\n");
     Remove(&table);
    
@@ -106,6 +105,7 @@ void doNotWaitForGenerator(int signum){
 }
 
 int shmid;
+int currentProcessRemTime;
 void sendtoprocess(int remTime);
 void handleNextProcess();
 int getRemTimeFromProcess();
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
     
     //flag determines something have been recieved in this time step
     bool hasRecivedNow = false;
-    int currentProcessRemTime = -1;
+    currentProcessRemTime = -1;
     while(true){
 
         if(prvtime!=getClk()){
@@ -227,6 +227,7 @@ int main(int argc, char *argv[])
                     Procsess.remanningtime=p.processinfo[2];
                     Procsess.wait=0;
                     strcpy(Procsess.state,State);
+                    ////////////////////////////////////
                     if(AlgorithmNmber == 4){
                         InsertSortedByRemainTime(Procsess, &table);
                     }
@@ -403,7 +404,7 @@ int getRemTimeFromProcess(){
     }
 
     char remTimeString[10];
-    // down(sem1);
+    down(sem1);
     
     
     strcpy(remTimeString, (char *) shmaddr);
@@ -494,11 +495,14 @@ void PreemtiveHPF()
      if(runPro==1 && table.count>0)
      {
          printf("can hereeeeeeeeeeeeeee\n");
-         int time=getRemTimeFromProcess();
+         int time=currentProcessRemTime;
+         
          table.Procsess[getProcess(pid,&table)].remanningtime=time;
          if(time==0)
-         {dealwithFinished();
-         runPro=0;
+         {
+            printf("al mfroood index0 = %d",getProcess(pid,&table));
+            dealwithFinished();
+            runPro=0;
          }
      }
       
@@ -510,7 +514,7 @@ void PreemtiveHPF()
         // printf("state %s",p.state);
         // check if the current process in the first of queue  , its first time to run
         bool check=false;
-        char stop[7]="stopped";
+        char stop[]="stopped";
         for(int i=0;i<7;i++)
         {
             if(table.Procsess[0].state[i]!=stop[i])
@@ -523,7 +527,7 @@ void PreemtiveHPF()
       if(check)
       { 
         // change state to be running
-        char state[7]="started";
+        char state[]="started";
         strcpy(table.Procsess[0].state,state);
         // tell the schuelder that he runs process now 
         runPro=1;
@@ -554,18 +558,22 @@ void PreemtiveHPF()
            printf("pid %d\n",pid);
             table.Procsess[0].pid=pid;
             table.Run=table.Procsess[0];
-            
+            WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+
         }
       }
       // if the process was sleeping /stopped , wake up it again 
       else
       { runPro=1;
-            char state[]="resume";
-              table.Run=table.Procsess[0];
+          char state[]="resumed";
+          table.Run=table.Procsess[0];
           strcpy(table.Procsess[0].state,state);
           printf("Process %d Continue\n",table.Procsess[0].remanningtime);
+          pid = table.Procsess[0].pid;
           printf("getpid %d\n",table.Procsess[0].pid);
           kill(table.Procsess[0].pid,SIGCONT);
+          WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+
       }
     }
     else if(table.count>0){
@@ -611,8 +619,9 @@ void PreemtiveHPF()
             {printf("i will stop\n");
             // change state of current process
             
-             char state[7]="stopped";
+             char state[]="stopped";
              strcpy(table.Procsess[index_running].state,state);
+             WritetoFile(table.Procsess[index_running].id,table.Procsess[index_running].state,table.Procsess[index_running].arrivaltime,table.Procsess[index_running].runningtime,table.Procsess[index_running].remanningtime,table.Procsess[index_running].wait);
 
              
              printf("Process %d Stopped\n",table.Procsess[index_running].id);
@@ -658,20 +667,23 @@ void PreemtiveHPF()
                     exit(-1);
                 }
                 else
-                { table.Procsess[0].pid=pid;
-                     table.Run=table.Procsess[0];
-                   
+                { 
+                    table.Procsess[0].pid=pid;
+                    table.Run=table.Procsess[0];
+                    WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
                 }
             }
             else
             {
                 runPro=1;
                 table.Run=table.Procsess[0];
-                char state[]="resume";
-                
+                char state[]="resumed";
+                pid = table.Procsess[0].pid;
                 printf("Process %d Continue\n",table.Procsess[0].remanningtime);
                 strcpy(table.Procsess[0].state,state);
                 kill(table.Procsess[0].pid,SIGCONT);
+                WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
+
             }
             }
         }
