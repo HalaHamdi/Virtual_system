@@ -148,7 +148,6 @@ void  dealwithFinished()
 
     if(memAlg==1){
         memAlg1();
-    }
     }else if(memAlg==2){
         insertSpace(Pblock,&F);
         CallGetNextFit();
@@ -157,6 +156,7 @@ void  dealwithFinished()
         //Inserted the fred space after this process has finished
         insertSpace(Pblock,&F);
     }
+   }
     Remove(&table);
     runPro=0;
   /* signal( SIGUSR1, handler); */
