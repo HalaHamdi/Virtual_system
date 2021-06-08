@@ -355,6 +355,7 @@ int main(int argc, char *argv[])
                 }
 
             }
+            }
             hasRecivedNow = false;
             
             //For each second, irrespectivly of which algo is currently running
