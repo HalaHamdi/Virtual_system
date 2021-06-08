@@ -130,6 +130,7 @@ int main(int argc, char *argv[])
     int TotalProcess=p.processinfo[0];
     int AlgorithmNmber=p.processinfo[1];
     int quantum=p.processinfo[2];
+    int memAlg=p.processinfo[3];
     printf("num of process from Scheudler %d \n",TotalProcess);
     struct processData  processArray[TotalProcess];
 
@@ -221,6 +222,7 @@ int main(int argc, char *argv[])
                     Procsess.runningtime=p.processinfo[2];
                     Procsess.priority=p.processinfo[3];
                     Procsess.remanningtime=p.processinfo[2];
+                    Procsess.memsize=p.processinfo[4];
                     Procsess.wait=0;
                     strcpy(Procsess.state,State);
                     if(AlgorithmNmber == 4){

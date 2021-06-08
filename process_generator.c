@@ -7,7 +7,7 @@ int msgq_id;
 struct processData
 {
     long mtype;
-    int processinfo[4];
+    int processinfo[5];
 };
 
 
@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
    
     char fileName[50];  
     int AlgorithmNmber;
+    int memAlg;
     int quantum=-1;
     key_t schedulerKey=1234;
     int pid[2],stat_loc;
@@ -63,8 +64,11 @@ int main(int argc, char *argv[])
     //  Read the chosen scheduling algorithm and its parameters, if there are any from the argument list.
     strcpy(fileName,argv[1]);
     AlgorithmNmber=atoi(argv[3]);
-    if(argc>4){
+    if(argc>6){
         quantum=atoi(argv[5]);
+        memAlg=atoi(argv[7]);
+    }else{
+         memAlg=atoi(argv[5]);
     }
 
     union Semun semun;
@@ -117,7 +121,8 @@ int main(int argc, char *argv[])
     Initiator.processinfo[0]=Totallines-1;
     Initiator.processinfo[1]=AlgorithmNmber;
     Initiator.processinfo[2]=quantum;
-    Initiator.processinfo[3]=-1;
+    Initiator.processinfo[3]=memAlg;
+    Initiator.processinfo[4]=-1;
     Initiator.mtype=1;
     int send_val=msgsnd(msgq_id,&Initiator,sizeof(Initiator.processinfo),!IPC_NOWAIT);
 
@@ -227,6 +232,7 @@ void storeProcessData(struct processData processArray[],FILE *fp,int Totallines)
         fscanf(fp,"%d",&p.processinfo[1]);
         fscanf(fp,"%d",&p.processinfo[2]);
         fscanf(fp,"%d",&p.processinfo[3]);
+        fscanf(fp,"%d",&p.processinfo[4]);
         processArray[i]=p;
     }
     fclose(fp);

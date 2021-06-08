@@ -13,6 +13,7 @@ struct ProcessPCB
     int id;
     int pid;
     char state[10];
+    int memsize;
 
 };
 struct PCB
