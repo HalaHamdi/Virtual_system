@@ -277,7 +277,7 @@ int main(int argc, char *argv[])
                
             }
             else if (AlgorithmNmber == 4){
-                if(currentProcessRemTime == 0){
+                if(runPro!=0 && currentProcessRemTime == 0){
                     dealwithFinished();
                 }
                 
