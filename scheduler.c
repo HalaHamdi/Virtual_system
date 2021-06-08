@@ -68,6 +68,7 @@ void down(int sem)
     
 }
 FILE * fp;
+FILE * MEMf;
 void Openfile(){
    fp = fopen ("scheduler.log","w");
    fprintf (fp, "#At time x process y state arr w total z remaing y wait k \n");
@@ -75,12 +76,23 @@ void Openfile(){
 void Closefile(){
 fclose (fp);
 }
-
 void WritetoFile(int id,char *state,int arr,int total,int remaining,int wait){
    
         fprintf(fp,"At time %d process %d %s arr %d total %d remain %d wait %d \n",getClk(),id,state,arr,total,remaining,wait);
     
+}
 
+void OpenMEMf(){
+   MEMf = fopen ("memory.log","w");
+   fprintf (MEMf, "#At time x allocated y bytes for process z from i to j \n");
+}
+void CloseMEMf(){
+fclose (MEMf);
+}
+void WritetoMEMf(int id,int space,int from,int to){
+   
+        fprintf(fp,"At time %d allocated %d bytes for process %d from %d to %d \n",getClk(),space,from,to);
+    
 }
 
 
@@ -119,6 +131,7 @@ void memAlg1(){
     waitP.inmemory=true; 
     Push(waitP,&table);
     procCount++;
+    WritetoMEMf(waitP.id,waitP.memsize,waitP.from,waitP.to);
     printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",waitP.id,waitP.from,waitP.to,waitP.memsize);
     }else{
      Push(waitP,&Procsesswait);
@@ -154,7 +167,6 @@ void  dealwithFinished()
 
     }else if(memAlg==3){
         //Inserted the fred space after this process has finished
-        insertSpace(Pblock,&F);
     }
    }
     Remove(&table);
@@ -185,7 +197,8 @@ void CallGetNextFit()
 
                           }
                           Procsesswait.Procsess[0].inmemory=true;
-                        printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to,Procsesswait.Procsess[0].memsize);
+                          WritetoMEMf(Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].memsize,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to);
+                          printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to,Procsesswait.Procsess[0].memsize);
 
                           Push(Procsesswait.Procsess[0],&table);
                           Remove(&Procsesswait);
@@ -210,6 +223,7 @@ int main(int argc, char *argv[])
     //signal (SIGUSR1, handler);
     signal (SIGUSR2, doNotWaitForGenerator);
     Openfile();   
+    OpenMEMf();
     int prvtime=getClk();
     
     printf("Scheduler id= %d \n created at time: %d \n",getpid(),prvtime);
@@ -347,6 +361,7 @@ int main(int argc, char *argv[])
                      insertStart(getblock,&F);
                     }
                     Procsess.inmemory=true; 
+                    WritetoMEMf(Procsess.id,Procsess.memsize,Procsess.from,Procsess.to);
                     printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
                     }
                     }
@@ -365,6 +380,7 @@ int main(int argc, char *argv[])
                                 insertSpace(getblock, &F);
                             }
                             Procsess.inmemory=true; 
+                            WritetoMEMf(Procsess.id,Procsess.memsize,Procsess.from,Procsess.to);
                             printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
                         } 
                         printFreeSpace(&F);                       
@@ -390,6 +406,7 @@ int main(int argc, char *argv[])
 
                           }
                           Procsess.inmemory=true;
+                        WritetoMEMf(Procsess.id,Procsess.memsize,Procsess.from,Procsess.to);  
                         printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
 
 
@@ -486,6 +503,7 @@ int main(int argc, char *argv[])
     }
 
     Closefile();
+    CloseMEMf();
     printf("scheduler is exiting..\n");
     destroyClk(true);
 }
