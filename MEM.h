@@ -32,8 +32,8 @@ void insertStart(struct Free F,struct Freeblocks *Object){
             break;
         }
     }
-    if(i=0){
-      Object->Mem[i]=F;
+    if(i=-1){
+      Object->Mem[i+1]=F;
     }
     //Object->Mem[i]=F;
     Object->count++;
@@ -71,7 +71,7 @@ void RemoveMEM(struct Freeblocks *Object)
 void Marge(struct Freeblocks *Object){
     for(int i=0;i<Object->count-1;i++){
         if(Object->Mem[i].to==Object->Mem[i+1].from){
-            Object->Mem[i].to=Object->Mem[i+1].from;
+            Object->Mem[i].to=Object->Mem[i+1].to;
             Object->Mem[i].space+=Object->Mem[i+1].space;
             for(int j=i+1;j<Object->count-1;j++){
                 Object->Mem[j]= Object->Mem[j+1];
