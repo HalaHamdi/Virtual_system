@@ -85,6 +85,7 @@ struct PCB table;
 int runPro=0;
 bool generatorHasFinished = false;
 int pid=-1;
+int nextfit=0;
 
 void  dealwithFinished(struct Freeblocks * F)
 {
@@ -259,6 +260,7 @@ int main(int argc, char *argv[])
                         printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
                         }
                     }
+
                     else if (memAlg == 3){
                         printf("In memAlg 3 /n");
                         struct Free getblock=GetBestFit(Procsess.memsize,&F);
@@ -274,7 +276,31 @@ int main(int argc, char *argv[])
                             printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
                         }                        
 
-                    }
+                    }  
+                    else if(memAlg==2)
+                    {
+                        // next fit;
+                        int position=nextfit;
+                        nextfit=GetNextfit(Procsess.memsize,&F,nextfit);
+                        if(nextfit==-1)
+                        {
+                            position=nextfit;
+                        }
+                        else
+                        {Procsess.from=F.Mem[nextfit].from;
+                          Procsess.to=F.Mem[nextfit].from+Procsess.memsize;
+                          if(Procsess.to-Procsess.from!=F.Mem[nextfit].space)
+                          {
+                              F.Mem[nextfit].from=Procsess.to;
+                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
+
+                          }
+                          Procsess.inmemory=true;
+                        printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+
+
+                        }
+                    }  
 
                     if(Procsess.inmemory){
                     if(AlgorithmNmber == 4){
@@ -284,7 +310,8 @@ int main(int argc, char *argv[])
                         Push(Procsess,&table);
                     }
                     procCount++;
-                    }else{
+                    }
+                    else{
                       Push(Procsess,&Procsesswait);
                     }
                     /////////////////////////////////here we will try to alocate process in memoy if not alcated put it in waitList and pop from table
@@ -363,6 +390,7 @@ int main(int argc, char *argv[])
         }
 
         if(procCount==TotalProcess&& table.count==0){break;}
+    
     }
 
     Closefile();
