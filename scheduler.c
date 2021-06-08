@@ -79,12 +79,14 @@ struct processData
     long mtype;
     int processinfo[5];
 };
+
 struct PCB table;
 struct PCB Procsesswait;
 struct Freeblocks F;
 int runPro=0;
 bool generatorHasFinished = false;
 int pid=-1;
+int nextfit=0;
 
 void memAlg(){
     
@@ -105,13 +107,21 @@ void  dealwithFinished()
     Pblock.from=table.Procsess[0].from;
     Pblock.to=table.Procsess[0].to;
     Pblock.space=table.Procsess[0].memsize;
+
+    if(memAlg==1){
     insertStart(Pblock,&F);
     Marge(&F);
     if(Procsesswait.count>0){
         memAlg1();
     }
-    
-  Remove(&table);
+    }else if(memAlg==2){
+
+    }else if(memAlg==3){
+    //Inserted the fred space after this process has finished
+    insertSpace(Pblock,&F);
+    }
+    Remove(&table);
+    runPro=0;
   /* signal( SIGUSR1, handler); */
 }
 
@@ -184,6 +194,7 @@ int main(int argc, char *argv[])
         perror("Error in semctl");
         exit(-1);
     }
+    F.count = 0;
     struct Free Block;
     Block.from=0;
     Block.to=1024;
@@ -269,6 +280,50 @@ int main(int argc, char *argv[])
                     }
                     }
 
+                    else if (memAlg == 3){
+                        printf("In memAlg 3 \n");
+                        printFreeSpace(&F);
+                        struct Free getblock=GetBestFit(Procsess.memsize,&F);
+                        if(getblock.space!=0){
+                            Procsess.from=getblock.from;
+                            Procsess.to=getblock.from+Procsess.memsize;
+                            if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
+                                getblock.from=Procsess.to;
+                                getblock.space=getblock.to-getblock.from;
+                                printf("getblock.from=%d \ngetblock.to=%d \ngetblock.space=%d \n",getblock.from,getblock.to,getblock.space);
+                                insertSpace(getblock, &F);
+                            }
+                            Procsess.inmemory=true; 
+                            printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+                        } 
+                        printFreeSpace(&F);                       
+
+                    }  
+                    else if(memAlg==2)
+                    {
+                        // next fit;
+                        int position=nextfit;
+                        nextfit=GetNextfit(Procsess.memsize,&F,nextfit);
+                        if(nextfit==-1)
+                        {
+                            nextfit=position;
+                        }
+                        else
+                        {Procsess.from=F.Mem[nextfit].from;
+                          Procsess.to=F.Mem[nextfit].from+Procsess.memsize;
+                          if(Procsess.to-Procsess.from!=F.Mem[nextfit].space)
+                          {
+                              F.Mem[nextfit].from=Procsess.to;
+                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
+
+                          }
+                          Procsess.inmemory=true;
+                        printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+
+
+                        }
+                    }  
+
                     if(Procsess.inmemory){
                     if(AlgorithmNmber == 4){
                         InsertSortedByRemainTime(Procsess, &table);
@@ -277,7 +332,8 @@ int main(int argc, char *argv[])
                         Push(Procsess,&table);
                     }
                     procCount++;
-                    }else{
+                    }
+                    else{
                       Push(Procsess,&Procsesswait);
                     }
                 
@@ -290,7 +346,7 @@ int main(int argc, char *argv[])
             if(AlgorithmNmber==2 || AlgorithmNmber==1){
                 if(FinshtimePro==prvtime){  //there is processes should be terminate
                     down(semFinish);
-                    dealwithFinished();
+                    dealwithFinished(&F);
                 }
 
                 if(table.count!=0 && runPro==0){
@@ -321,8 +377,8 @@ int main(int argc, char *argv[])
                 PreemtiveHPF();
             }
             else if (AlgorithmNmber == 4){
-                if(currentProcessRemTime == 0){
-                    dealwithFinished();
+                if( runPro != 0 && currentProcessRemTime == 0){
+                    dealwithFinished(&F);
                 }
                 
                 //if a new process has arrived go compare it with the currently running
@@ -357,6 +413,7 @@ int main(int argc, char *argv[])
         }
 
         if(procCount==TotalProcess&& table.count==0){break;}
+    
     }
 
     Closefile();
