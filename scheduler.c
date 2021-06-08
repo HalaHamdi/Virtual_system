@@ -80,10 +80,15 @@ struct processData
     int processinfo[5];
 };
 struct PCB table;
- struct PCB Procsesswait;
+struct PCB Procsesswait;
+struct Freeblocks F;
 int runPro=0;
 bool generatorHasFinished = false;
 int pid=-1;
+
+void memAlg(){
+    
+}
 
 void  dealwithFinished()
 {
@@ -93,9 +98,20 @@ void  dealwithFinished()
     printf("process Finished %d \n",table.Procsess[0].id);
     table.Procsess[0].remanningtime=0;
     WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
-    Remove(&table);
+    
     runPro=0;
-  
+     //memAlg 1
+    struct Free Pblock;
+    Pblock.from=table.Procsess[0].from;
+    Pblock.to=table.Procsess[0].to;
+    Pblock.space=table.Procsess[0].memsize;
+    insertStart(Pblock,&F);
+    Marge(&F);
+    if(Procsesswait.count>0){
+        memAlg1();
+    }
+    
+  Remove(&table);
   /* signal( SIGUSR1, handler); */
 }
 
@@ -168,7 +184,6 @@ int main(int argc, char *argv[])
         perror("Error in semctl");
         exit(-1);
     }
-    struct Freeblocks F;
     struct Free Block;
     Block.from=0;
     Block.to=1024;
@@ -216,7 +231,7 @@ int main(int argc, char *argv[])
             //Recieving new arrived processes if found 
             while(true){
                 //printf("check for recievness %d \n",prvtime);
-                rec_val =msgrcv(msgq_id,&p,sizeof(p.processinfo),0, IPC_NOWAIT);
+                rec_val =rec_val=msgrcv(msgq_id,&p,sizeof(p.processinfo),0,IPC_NOWAIT);
                 if(rec_val == -1)
                 {      perror("Errror in recccccccccccc"); 
                     break;
@@ -245,9 +260,12 @@ int main(int argc, char *argv[])
                     if(Procsess.to-Procsess.from!=getblock.space){   //we have external fragmentation need to pushed
                      getblock.from=Procsess.to;
                      getblock.space=getblock.from-getblock.to;
+                     insertStart(getblock,&F);
                     }
                     Procsess.inmemory=true; 
                     printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
+                    }else{
+                        Procsess.inmemory=false;
                     }
                     }
 
@@ -262,6 +280,7 @@ int main(int argc, char *argv[])
                     }else{
                       Push(Procsess,&Procsesswait);
                     }
+                
                     /////////////////////////////////here we will try to alocate process in memoy if not alcated put it in waitList and pop from table
                 }    
             }

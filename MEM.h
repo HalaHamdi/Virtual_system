@@ -43,7 +43,7 @@ struct Free GitFristFit(int space,struct Freeblocks *Object){
     for(int i=0;i<Object->count;i++){
         if(Object->Mem[i].space>=space){
             fristblock=Object->Mem[i];
-            for(int j=i+1;i<Object->count-1;j++){
+            for(int j=i;j<Object->count-1;j++){
                 Object->Mem[j]=Object->Mem[j+1];
             }
             Object->count--;
