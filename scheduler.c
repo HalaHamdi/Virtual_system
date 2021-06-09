@@ -290,7 +290,7 @@ int RRPointer = 0;
 int RRStartTime = -1;
 bool RRStarted = false;
 
-
+struct FreeBuddyBlock myBuddy;
 
 
 
@@ -358,7 +358,10 @@ int main(int argc, char *argv[])
     Block.from=0;
     Block.to=1024;
     Block.space=1024;
-    insertStart(Block,&F);
+    if(memAlg!=4){ insertStart(Block,&F);}
+    else{PushToBuddyBlocks(Block,&myBuddy);}
+
+    PrintBuddyBlocks(&myBuddy);
     struct ProcessPCB Procsess;
     table.count=0;
     Procsesswait.count=0;

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #define MAX_SIZE_MEM 1024
 // struct PCB *Object,value;
 
@@ -18,15 +19,8 @@ struct Freeblocks
 struct BuddyFreeBlocks
 {
     struct Freeblocks blocks[10];
-    int count;
 };
-void PrintBuddyBlocks(struct BuddyFreeBlocks *Object )
-{
-    for(int i=0;i<10;i++)
-    {
-       printf("Blocks count=%d",Object->blocks[i].count);
-    }
-}
+
 void printOneSpace(struct Free block){
     printf("from %d To %d a space of %d\n",block.from,block.to,block.space);
 }
@@ -171,3 +165,19 @@ struct Free GetBestFit(int space,struct Freeblocks *Object){
 
     return bestblock;
 }
+
+void PrintBuddyBlocks(struct BuddyFreeBlocks *Object )
+{
+    for(int i=0;i<10;i++)
+    {
+      for(int j=0; j<Object->blocks[i].count;j++){
+          printf("for block %d has free memory from %d to %d \n",i,Object->blocks[i].Mem[j].from,Object->blocks[i].Mem[j].to);
+      }
+    }
+}
+void PushToBuddyBlocks(struct Free F,struct BuddyFreeBlocks *Object){
+int memsize=log2(F.space);
+printf("the size of the pushed element related to power of %d \n",memsize);
+push(F,&Object->blocks[memsize]);
+}
+
