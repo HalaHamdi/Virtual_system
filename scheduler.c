@@ -61,6 +61,7 @@ void down(int sem)
     
 }
 FILE * fp;
+FILE * MEMf;
 void Openfile(){
    fp = fopen ("scheduler.log","w");
    fprintf (fp, "#At time x process y state arr w total z remaing y wait k \n");
@@ -68,12 +69,23 @@ void Openfile(){
 void Closefile(){
 fclose (fp);
 }
-
 void WritetoFile(int id,char *state,int arr,int total,int remaining,int wait){
    
         fprintf(fp,"At time %d process %d %s arr %d total %d remain %d wait %d \n",getClk(),id,state,arr,total,remaining,wait);
     
+}
 
+void OpenMEMf(){
+   MEMf = fopen ("memory.log","w");
+   fprintf (MEMf, "#At time x allocated y bytes for process z from i to j \n");
+}
+void CloseMEMf(){
+fclose (MEMf);
+}
+void WritetoMEMf(int id,int space,int from,int to){
+   
+        fprintf(fp,"At time %d allocated %d bytes for process %d from %d to %d \n",getClk(),id,space,from,to);
+    
 }
 
 
@@ -114,6 +126,7 @@ void memAlg1(){
     waitP.inmemory=true; 
     Push(waitP,&table);
     procCount++;
+    WritetoMEMf(waitP.id,waitP.memsize,waitP.from,waitP.to);
     printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",waitP.id,waitP.from,waitP.to,waitP.memsize);
     }else{
      Push(waitP,&Procsesswait);
@@ -142,6 +155,26 @@ bool tryToAllocate_BestFit(struct ProcessPCB* p){
     //if was allocated will return true, if wasn't will return false
     return p->inmemory;
 }
+void memAlg3(struct Free Pblock){
+
+    for(int i=0; i < Procsesswait.count; i++){
+        bool isAllocated = tryToAllocate_BestFit(&Procsesswait.Procsess[i]);
+        if(isAllocated){
+            struct ProcessPCB p = Procsesswait.Procsess[i];
+            //Remove that process from the Processwait PCB
+            removeByIndex(i,&Procsesswait);
+            if(AlgorithmNmber == 4){
+                InsertSortedByRemainTime(p, &table);
+            }
+            else{
+                Push(p,&table);
+            }
+            printf("inserted in table\n");
+            procCount++;                    
+        }
+    }
+
+}
 
 void  dealwithFinished()
 {
@@ -169,28 +202,15 @@ void  dealwithFinished()
         CallGetNextFit();
 
     }else if(memAlg==3){
-        
+
         printf("Try to alloc best\n");
         printFreeSpace(&F);
-
-        for(int i=0; i < Procsesswait.count; i++){
-            bool isAllocated = tryToAllocate_BestFit(&Procsesswait.Procsess[i]);
-            if(isAllocated){
-                struct ProcessPCB p = Procsesswait.Procsess[i];
-                //Remove that process from the Processwait PCB
-                removeByIndex(i,&Procsesswait);
-                if(AlgorithmNmber == 4){
-                    InsertSortedByRemainTime(p, &table);
-                }
-                else{
-                    Push(p,&table);
-                }
-                printf("inserted in table\n");
-                procCount++;                    
-            }
-        }
+        
+        memAlg3(Pblock);
+        
         printf("After the trial alloc\n");
         printFreeSpace(&F);
+        
     }
    }
     Remove(&table);
@@ -216,12 +236,14 @@ void CallGetNextFit()
                           if(Procsesswait.Procsess[0].to-Procsesswait.Procsess[0].from!=F.Mem[nextfit].space)
                           {
                               F.Mem[nextfit].from=Procsesswait.Procsess[0].to;
-                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
-                               insertSpace(F.Mem[nextfit], &F);
+                              F.Mem[nextfit].space=F.Mem[nextfit].to-F.Mem[nextfit].from;
+                               insertStart(F.Mem[nextfit], &F);
+                               Marge(&F);
 
                           }
                           Procsesswait.Procsess[0].inmemory=true;
-                        printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to,Procsesswait.Procsess[0].memsize);
+                          WritetoMEMf(Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].memsize,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to);
+                          printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to,Procsesswait.Procsess[0].memsize);
 
                           Push(Procsesswait.Procsess[0],&table);
                           Remove(&Procsesswait);
@@ -246,6 +268,7 @@ int main(int argc, char *argv[])
     //signal (SIGUSR1, handler);
     signal (SIGUSR2, doNotWaitForGenerator);
     Openfile();   
+    OpenMEMf();
     int prvtime=getClk();
     
     printf("Scheduler id= %d \n created at time: %d \n",getpid(),prvtime);
@@ -384,6 +407,7 @@ int main(int argc, char *argv[])
                      insertStart(getblock,&F);
                     }
                     Procsess.inmemory=true; 
+                    WritetoMEMf(Procsess.id,Procsess.memsize,Procsess.from,Procsess.to);
                     printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
                     }
                     }
@@ -410,11 +434,13 @@ int main(int argc, char *argv[])
                           if(Procsess.to-Procsess.from!=F.Mem[nextfit].space)
                           {
                               F.Mem[nextfit].from=Procsess.to;
-                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
-                               insertSpace(F.Mem[nextfit], &F);
+                              F.Mem[nextfit].space=F.Mem[nextfit].to-F.Mem[nextfit].from;
+                               insertStart(F.Mem[nextfit], &F);
+                              
 
                           }
                           Procsess.inmemory=true;
+                        WritetoMEMf(Procsess.id,Procsess.memsize,Procsess.from,Procsess.to);  
                         printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
 
 
@@ -511,6 +537,7 @@ int main(int argc, char *argv[])
     }
 
     Closefile();
+    CloseMEMf();
     printf("scheduler is exiting..\n");
     destroyClk(true);
 }
