@@ -82,9 +82,9 @@ void OpenMEMf(){
 void CloseMEMf(){
 fclose (MEMf);
 }
-void WritetoMEMf(int id,int space,int from,int to){
+void WritetoMEMf(int id,char *state,int space,int from,int to){
    
-        fprintf(fp,"At time %d allocated %d bytes for process %d from %d to %d \n",getClk(),id,space,from,to);
+        fprintf(MEMf,"At time %d %s %d bytes for process %d from %d to %d \n",getClk(),state,space,id,from,to);
     
 }
 
@@ -126,7 +126,7 @@ void memAlg1(){
     waitP.inmemory=true; 
     Push(waitP,&table);
     procCount++;
-    WritetoMEMf(waitP.id,waitP.memsize,waitP.from,waitP.to);
+    WritetoMEMf(waitP.id,"allocated",waitP.memsize,waitP.from,waitP.to);
     printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",waitP.id,waitP.from,waitP.to,waitP.memsize);
     }else{
      Push(waitP,&Procsesswait);
@@ -190,7 +190,7 @@ void  dealwithFinished()
     printf("process Finished %d \n",table.Procsess[0].id);
     table.Procsess[0].remanningtime=0;
     WritetoFile(table.Procsess[0].id,table.Procsess[0].state,table.Procsess[0].arrivaltime,table.Procsess[0].runningtime,table.Procsess[0].remanningtime,table.Procsess[0].wait);
-    
+     WritetoMEMf(table.Procsess[0].id,"freed",table.Procsess[0].memsize,table.Procsess[0].from,table.Procsess[0].to);
     runPro=0;
      //memAlg 1
     struct Free Pblock;
@@ -241,7 +241,7 @@ void CallGetNextFit()
 
                           }
                           Procsesswait.Procsess[0].inmemory=true;
-                          WritetoMEMf(Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].memsize,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to);
+                          WritetoMEMf(Procsesswait.Procsess[0].id,"allocated",Procsesswait.Procsess[0].memsize,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to);
                           printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to,Procsesswait.Procsess[0].memsize);
 
                           Push(Procsesswait.Procsess[0],&table);
@@ -406,7 +406,7 @@ int main(int argc, char *argv[])
                      insertStart(getblock,&F);
                     }
                     Procsess.inmemory=true; 
-                    WritetoMEMf(Procsess.id,Procsess.memsize,Procsess.from,Procsess.to);
+                    WritetoMEMf(Procsess.id,"allocated",Procsess.memsize,Procsess.from,Procsess.to);
                     printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
                     }
                     }
@@ -438,7 +438,7 @@ int main(int argc, char *argv[])
 
                           }
                           Procsess.inmemory=true;
-                        WritetoMEMf(Procsess.id,Procsess.memsize,Procsess.from,Procsess.to);  
+                        WritetoMEMf(Procsess.id,"allocated",Procsess.memsize,Procsess.from,Procsess.to);  
                         printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
 
 
