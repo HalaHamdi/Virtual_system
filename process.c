@@ -54,25 +54,27 @@ void down(int sem)
 
 /* Modify this file as needed*/
 int remainingtime;
-
+void *shmaddr1;
+void clearResources(int);
 
 int main(int agrc, char *argv[])
 {
+    signal(SIGINT, clearResources);
     printf("you are in process %d \n",getpid());
     initClk();
-    int shmid, pid,sempho1;
+    int pid,sempho1;
     key_t memo=7893;
     sempho1 = ftok("sem1", 'a');
     // key_t sempho1=7894;
 
-    shmid = shmget(memo, 4096, IPC_CREAT | 0644);
+    int shmid = shmget(memo, 4096, IPC_CREAT | 0644);
 
     if (shmid == -1)
     {
         perror("Error in create");
         exit(-1);
     }
-    void *shmaddr = shmat(shmid, (void *)0, 0);
+    shmaddr1 = shmat(shmid, (void *)0, 0);
     union Semun semun;
 
     int sem1 = semget(sempho1, 1, 0666 | IPC_CREAT);
@@ -96,7 +98,7 @@ int main(int agrc, char *argv[])
     down(sem1);
 
     char runTime[10];
-    strcpy(runTime,(char *) shmaddr);
+    strcpy(runTime,(char *) shmaddr1);
     //TODO The process needs to get the remaining time from somewhere
     remainingtime = atoi(runTime);
     printf("runTime From process %d \n",remainingtime);
@@ -118,7 +120,7 @@ int main(int agrc, char *argv[])
                 //Send the latest remaining time to the scheduler
                 char text[10];
                 sprintf(text, "%d", remainingtime);  
-                strcpy((char *) shmaddr,text);
+                strcpy((char *) shmaddr1,text);
                 
                 int VAL= semctl(sem1, 0, GETVAL, semun);
                 printf("semval after UUUP in function %d \n",VAL);
@@ -148,7 +150,14 @@ int main(int agrc, char *argv[])
     
     destroyClk(false);
     printf("TRMINAT process with run time %d \n",atoi(runTime));
-    //kill(getppid(), SIGUSR1);
     up(semFinish);
+    clearResources(2);
+    
     return 0;
+}
+
+void clearResources(int signum)
+{
+    shmdt(shmaddr1);
+    signal(SIGINT, clearResources);
 }

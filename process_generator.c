@@ -4,6 +4,7 @@
 
 
 int msgq_id;
+int semSync;
 
 struct processData
 {
@@ -74,7 +75,7 @@ int main(int argc, char *argv[])
 
     union Semun semun;
     key_t syncSendRecvSem = 7896;
-    int semSync = semget(syncSendRecvSem, 1, 0666 | IPC_CREAT);
+    semSync = semget(syncSendRecvSem, 1, 0666 | IPC_CREAT);
 
     if (semSync == -1)
     {
@@ -186,9 +187,9 @@ int main(int argc, char *argv[])
 void clearResources(int signum)
 {
     msgctl(msgq_id,IPC_RMID,(struct msqid_ds*)0);
+    semctl(semSync, 0, IPC_RMID, (union semun*)0);
     killpg(getpgrp(),SIGKILL);
     signal(SIGINT, clearResources);
-
 }
 void getChildren(int pid[]){
    pid[0]=fork();
