@@ -153,5 +153,6 @@ int main(int agrc, char *argv[])
     printf("TRMINAT process with run time %d \n",atoi(runTime));
     //kill(getppid(), SIGUSR1);
     up(semFinish);
+    shmdt(shmaddr);
     return 0;
 }
