@@ -278,6 +278,22 @@ void handleNextProcess();
 int getRemTimeFromProcess();
 void updateWaitingTime();
 
+
+
+
+void RRStartORContinue();
+void RRFinishProcess();
+void RRstopProcess();
+void RRforkProcess();
+void RRupdateWaitingTime();
+int RRPointer = 0;
+int RRStartTime = -1;
+bool RRStarted = false;
+
+
+
+
+
 int main(int argc, char *argv[])
 {
     initClk();
@@ -406,6 +422,7 @@ int main(int argc, char *argv[])
                     Procsess.priority=p.processinfo[3];
                     Procsess.remanningtime=p.processinfo[2];
                     Procsess.memsize=p.processinfo[4];
+                    Procsess.pid=-1;
                     Procsess.wait=0;
                     Procsess.inmemory=false;
                     strcpy(Procsess.state,State);
@@ -523,6 +540,57 @@ int main(int argc, char *argv[])
                 if( runPro != 0 && currentProcessRemTime == 0){
                     dealwithFinished(&F);
                 }
+                else if (AlgorithmNmber == 5){
+
+                    if (table.count > 0)
+                {
+                    printf("INSIDE THE IF CONDITION IN RR TABLE.COUNT>0 ,RRStartTime %d...... \n", RRStartTime);
+                    if (!RRStarted) // no process in progress
+                    {
+                        printf("INSIDE THE RRSTARTTED CONDITION IN RR ......... \n");
+                        RRStarted = true;
+                        printf("RRStarted \n");
+                        sendtoprocess(table.Procsess[RRPointer].runningtime);
+                        RRforkProcess();
+                        RRStartTime = getClk();
+                    }
+                    else
+                    {
+
+                        int remainingTime = getRemTimeFromProcess();
+
+                        if (remainingTime == 0)
+                        {
+                            printf("INSIDE THE REMAINING TIME =0 IN RR .............. \n");
+                            RRFinishProcess();
+                            //deleted process was the last one in array
+                            if (RRPointer == table.count)
+                            {
+                                RRPointer = 0;
+                            }
+                            //otherwise donot update the pointer because after a process
+                            //terminates , the next process has been shifted to the terminated
+                            //process's position.
+                            if (table.count != 0)
+                            {
+                                RRStartORContinue();
+                            }
+                            RRStartTime = getClk();
+
+                        } //quatum part has ended for a process
+                        else if ((getClk() - RRStartTime) == quantum)
+                        {
+                            printf("INSIDE CLK-TIME=QUANTUM................... clk=%d ,RRStart= %d \n", getClk(), RRStartTime);
+                            RRstopProcess(remainingTime);
+                            RRPointer = (RRPointer + 1) % table.count;
+                            printf("NOW RRPOINTER AFTER UPATE = %d \n", RRPointer);
+                            RRStartORContinue();
+                            RRStartTime = getClk();
+                        }
+                    }
+                }
+
+                }
                 
                 //if a new process has arrived go compare it with the currently running
                 if(table.count!=0 && runPro!=0 && hasRecivedNow){
@@ -557,7 +625,8 @@ int main(int argc, char *argv[])
             //Update the waiting time for all processes in the PCB except for the first process, which is the one that's currently resumed or unning
             //Thus we shouldn't count this moment as a waiting moment for the currently running process
             //We only count this moment as a waiting moment, for waiting and stopped processes statuses
-            updateWaitingTime();
+           if(AlgorithmNmber!=5){updateWaitingTime();}
+            else{RRupdateWaitingTime();}
         }
 
         if(procCount==TotalProcess&& table.count==0){break;}
@@ -931,4 +1000,77 @@ void PreemtiveHPF()
     }
     // printf("i am outtttttttttttttttttttttttttttttttttttttttttttt hhhhhhhhhhhh\n");
        
+}
+void RRforkProcess()
+{
+    int pid = fork();
+    if (pid == -1)
+    {
+        perror("error in forking a process");
+    }
+    else if (pid == 0)
+    { //child
+        execl("./process.out", "process.out", NULL);
+    }
+
+    table.Procsess[RRPointer].pid = pid; //set the pid of the one that the pointer RRPointer will work on now
+    printf("process with id = %d  forked \n", table.Procsess[RRPointer].id);
+    char started[] = "started";
+    strcpy(table.Procsess[RRPointer].state, started);
+    WritetoFile(table.Procsess[RRPointer].id, table.Procsess[RRPointer].state, table.Procsess[RRPointer].arrivaltime, table.Procsess[RRPointer].runningtime, table.Procsess[RRPointer].remanningtime, table.Procsess[RRPointer].wait);
+}
+void RRStartORContinue()
+{
+
+    if (table.Procsess[RRPointer].pid == -1)
+    {
+        sendtoprocess(table.Procsess[RRPointer].runningtime);
+        RRforkProcess();
+    }
+    else
+    {
+        printf("process with id =%d continued \n", table.Procsess[RRPointer].id);
+        kill(table.Procsess[RRPointer].pid, SIGCONT);
+        char resumed[] = "resumed";
+        strcpy(table.Procsess[RRPointer].state, resumed);
+        WritetoFile(table.Procsess[RRPointer].id, table.Procsess[RRPointer].state, table.Procsess[RRPointer].arrivaltime, table.Procsess[RRPointer].runningtime, table.Procsess[RRPointer].remanningtime, table.Procsess[RRPointer].wait);
+    }
+}
+void RRFinishProcess()
+{
+    char finished[] = "finished";
+    strcpy(table.Procsess[RRPointer].state, finished);
+    printf("process with id =%d Finished  \n", table.Procsess[RRPointer].id);
+    WritetoFile(table.Procsess[RRPointer].id, table.Procsess[RRPointer].state, table.Procsess[RRPointer].arrivaltime, table.Procsess[RRPointer].runningtime, table.Procsess[RRPointer].remanningtime, table.Procsess[RRPointer].wait);
+    Removeone(table.Procsess[RRPointer].pid, &table);
+    if (table.count == 0)
+    {
+        RRStarted = false;
+    }
+}
+void RRstopProcess(int remaining)
+{
+
+    table.Procsess[RRPointer].remanningtime = remaining;
+
+    printf("Sched: stopped Process with id = %d and pid  = %d  with remainingTime =%d with RRPOINTER = %d \n", table.Procsess[RRPointer].id, table.Procsess[RRPointer].pid, table.Procsess[RRPointer].remanningtime, RRPointer);
+    // if(table.Procsess[RRPointer].remanningtime==0){ //not sure if it is necessary
+    //     RRFinishProcess();
+    // }
+    // else{
+    kill(table.Procsess[RRPointer].pid, SIGSTOP);
+    printf("IN THE KILLL PROCESSSSSSSSSSSSSS  at time = %d  \n ", getClk());
+    char stopped[] = "stopped";
+    strcpy(table.Procsess[RRPointer].state, stopped);
+    WritetoFile(table.Procsess[RRPointer].id, table.Procsess[RRPointer].state, table.Procsess[RRPointer].arrivaltime, table.Procsess[RRPointer].runningtime, table.Procsess[RRPointer].remanningtime, table.Procsess[RRPointer].wait);
+
+    //}
+}
+
+void RRupdateWaitingTime()
+{
+    for (int i = 0; i < table.count; i++)
+    {
+       if(i!=RRPointer){table.Procsess[i].wait++;}
+    }
 }
