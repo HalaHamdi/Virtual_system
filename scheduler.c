@@ -148,6 +148,8 @@ bool tryToAllocate_BestFit(struct ProcessPCB* p){
         p->inmemory=true; 
         WritetoMEMf(p->id,"allocated",p->memsize,p->from,p->to);
         printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",p->id,p->from,p->to,p->memsize);
+        WritetoMEMf(p->id,"allocated",p->memsize,p->from,p->to);
+                    
     }
     else{
         p->inmemory=false;
