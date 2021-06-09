@@ -589,6 +589,9 @@ void updateWaitingTime(){
     for(int i=1;i<table.count;i++){
         table.Procsess[i].wait++;
     }
+    for(int i=0;i<Procsesswait.count;i++){
+        Procsesswait.Procsess[i].wait++;
+    }
 }
 
 int getRemTimeFromProcess(){
