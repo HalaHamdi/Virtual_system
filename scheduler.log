@@ -1,19 +1,43 @@
 #At time x process y state arr w total z remaing y wait k 
-At time 2 process 1 started arr 2 total 27 remain 27 wait 0 
-At time 29 process 1 finished arr 2 total 27 remain 0 wait 0 TA 27 WTA 1.00 
-At time 29 process 2 started arr 6 total 5 remain 5 wait 23 
-At time 34 process 2 finished arr 6 total 5 remain 0 wait 23 TA 28 WTA 5.60 
-At time 34 process 4 started arr 16 total 5 remain 5 wait 18 
-At time 39 process 4 finished arr 16 total 5 remain 0 wait 18 TA 23 WTA 4.60 
-At time 39 process 3 started arr 11 total 9 remain 9 wait 28 
-At time 48 process 3 finished arr 11 total 9 remain 0 wait 28 TA 37 WTA 4.11 
-At time 48 process 5 started arr 44 total 1 remain 1 wait 4 
-At time 49 process 5 finished arr 44 total 1 remain 0 wait 4 TA 5 WTA 5.00 
-At time 49 process 9 started arr 48 total 1 remain 1 wait 0 
-At time 50 process 9 finished arr 48 total 1 remain 0 wait 0 TA 2 WTA 2.00 
-At time 50 process 7 started arr 44 total 2 remain 2 wait 1 
-At time 52 process 7 finished arr 44 total 2 remain 0 wait 1 TA 8 WTA 4.00 
-At time 52 process 6 started arr 44 total 2 remain 2 wait 8 
-At time 54 process 6 finished arr 44 total 2 remain 0 wait 8 TA 10 WTA 5.00 
-At time 54 process 8 started arr 44 total 2 remain 2 wait 4 
-At time 56 process 8 finished arr 44 total 2 remain 0 wait 4 TA 12 WTA 6.00 
+At time 3 process 1 started arr 2 total 27 remain 27 wait 0 
+At time 6 process 1 stopped arr 2 total 27 remain 24 wait 0 
+At time 6 process 2 started arr 6 total 5 remain 5 wait 0 
+At time 9 process 2 stopped arr 6 total 5 remain 2 wait 0 
+At time 9 process 1 resumed arr 2 total 27 remain 24 wait 3 
+At time 12 process 1 stopped arr 2 total 27 remain 21 wait 3 
+At time 12 process 2 resumed arr 6 total 5 remain 2 wait 3 
+At time 14 process 2 finished arr 6 total 5 remain 2 wait 3 TA 8 WTA 1.60 
+At time 14 process 3 started arr 11 total 9 remain 9 wait 3 
+At time 17 process 3 stopped arr 11 total 9 remain 6 wait 3 
+At time 17 process 4 started arr 16 total 5 remain 5 wait 1 
+At time 20 process 4 stopped arr 16 total 5 remain 2 wait 1 
+At time 20 process 1 resumed arr 2 total 27 remain 21 wait 11 
+At time 23 process 1 stopped arr 2 total 27 remain 18 wait 11 
+At time 23 process 3 resumed arr 11 total 9 remain 6 wait 9 
+At time 26 process 3 stopped arr 11 total 9 remain 3 wait 9 
+At time 26 process 4 resumed arr 16 total 5 remain 2 wait 7 
+At time 28 process 4 finished arr 16 total 5 remain 2 wait 7 TA 12 WTA 2.40 
+At time 28 process 1 resumed arr 2 total 27 remain 18 wait 16 
+At time 31 process 1 stopped arr 2 total 27 remain 15 wait 16 
+At time 31 process 3 resumed arr 11 total 9 remain 3 wait 14 
+At time 34 process 3 finished arr 11 total 9 remain 3 wait 14 TA 23 WTA 2.56 
+At time 34 process 1 resumed arr 2 total 27 remain 15 wait 19 
+At time 37 process 1 stopped arr 2 total 27 remain 12 wait 19 
+At time 37 process 1 resumed arr 2 total 27 remain 12 wait 19 
+At time 40 process 1 stopped arr 2 total 27 remain 9 wait 19 
+At time 40 process 1 resumed arr 2 total 27 remain 9 wait 19 
+At time 43 process 1 stopped arr 2 total 27 remain 6 wait 19 
+At time 43 process 1 resumed arr 2 total 27 remain 6 wait 19 
+At time 46 process 1 stopped arr 2 total 27 remain 3 wait 19 
+At time 46 process 5 started arr 44 total 1 remain 1 wait 2 
+At time 47 process 5 finished arr 44 total 1 remain 1 wait 2 TA 3 WTA 3.00 
+At time 47 process 6 started arr 44 total 2 remain 2 wait 3 
+At time 49 process 6 finished arr 44 total 2 remain 2 wait 3 TA 5 WTA 2.50 
+At time 49 process 7 started arr 44 total 2 remain 2 wait 2 
+At time 51 process 7 finished arr 44 total 2 remain 2 wait 2 TA 7 WTA 3.50 
+At time 51 process 8 started arr 44 total 2 remain 2 wait 2 
+At time 53 process 8 finished arr 44 total 2 remain 2 wait 2 TA 9 WTA 4.50 
+At time 53 process 9 started arr 48 total 1 remain 1 wait 0 
+At time 54 process 9 finished arr 48 total 1 remain 1 wait 0 TA 6 WTA 6.00 
+At time 54 process 1 resumed arr 2 total 27 remain 3 wait 27 
+At time 57 process 1 finished arr 2 total 27 remain 3 wait 27 TA 55 WTA 2.04 

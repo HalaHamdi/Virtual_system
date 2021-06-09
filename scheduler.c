@@ -310,7 +310,7 @@ int RRPointer = 0;
 int RRStartTime = -1;
 bool RRStarted = false;
 
-struct FreeBuddyBlock myBuddy;
+//struct FreeBuddyBlock myBuddy;
 
 
 
@@ -379,9 +379,9 @@ int main(int argc, char *argv[])
     Block.to=1024;
     Block.space=1024;
     if(memAlg!=4){ insertStart(Block,&F);}
-    else{PushToBuddyBlocks(Block,&myBuddy);}
+    //else{PushToBuddyBlocks(Block,&myBuddy);}
 
-    PrintBuddyBlocks(&myBuddy);
+    //PrintBuddyBlocks(&myBuddy);
     struct ProcessPCB Procsess;
     table.count=0;
     Procsesswait.count=0;
@@ -1067,7 +1067,34 @@ void RRFinishProcess()
     char finished[] = "finished";
     strcpy(table.Procsess[RRPointer].state, finished);
     printf("process with id =%d Finished  \n", table.Procsess[RRPointer].id);
+    WritetoMEMf(table.Procsess[RRPointer].id,"freed",table.Procsess[RRPointer].memsize,table.Procsess[RRPointer].from,table.Procsess[RRPointer].to);
     WritetoFile(table.Procsess[RRPointer].id, table.Procsess[RRPointer].state, table.Procsess[RRPointer].arrivaltime, table.Procsess[RRPointer].runningtime, table.Procsess[RRPointer].remanningtime, table.Procsess[RRPointer].wait);
+    struct Free Pblock;
+    Pblock.from=table.Procsess[RRPointer].from;
+    Pblock.to=table.Procsess[RRPointer].to;
+    Pblock.space=table.Procsess[RRPointer].memsize;
+    insertStart(Pblock,&F);
+    Marge(&F);
+    if(Procsesswait.count>0){   //if process in wait List
+    if(memAlg==1){
+        memAlg1();
+    }else if(memAlg==2){
+        
+        CallGetNextFit();
+
+    }else if(memAlg==3){
+
+        printf("Try to alloc best\n");
+        printFreeSpace(&F);
+        
+        memAlg3(Pblock);
+        
+        printf("After the trial alloc\n");
+        printFreeSpace(&F);
+        
+    }
+   }
+
     Removeone(table.Procsess[RRPointer].pid, &table);
     if (table.count == 0)
     {

@@ -165,7 +165,7 @@ struct Free GetBestFit(int space,struct Freeblocks *Object){
 
     return bestblock;
 }
-
+/*
 void PrintBuddyBlocks(struct BuddyFreeBlocks *Object )
 {
     for(int i=0;i<10;i++)
@@ -181,3 +181,4 @@ printf("the size of the pushed element related to power of %d \n",memsize);
 push(F,&Object->blocks[memsize]);
 }
 
+*/
