@@ -540,7 +540,37 @@ int main(int argc, char *argv[])
                 if( runPro != 0 && currentProcessRemTime == 0){
                     dealwithFinished(&F);
                 }
-                else if (AlgorithmNmber == 5){
+              
+                
+                //if a new process has arrived go compare it with the currently running
+                if(table.count!=0 && runPro!=0 && hasRecivedNow){
+                    
+                    int currentRunningIndex = getProcess(pid,&table);
+                    
+                    printf("currentRunningIndex: %d\n",currentRunningIndex);
+                    PrintProcess(table.Procsess[0]);
+                    //if the remaining time of the processes currently running is larger than that of the first process in the queue (the process that mostly deserves to run in SRTN) 
+                    if(currentProcessRemTime > table.Procsess[0].remanningtime){
+                        //send stop signal to the currently running process
+                        
+                        printf("sending a stop signal \n");
+                        kill(pid,SIGSTOP);
+                        strcpy(table.Procsess[currentRunningIndex].state,stoppedState);
+                        runPro = 0;
+
+                        WritetoFile(table.Procsess[currentRunningIndex].id,table.Procsess[currentRunningIndex].state,table.Procsess[currentRunningIndex].arrivaltime,table.Procsess[currentRunningIndex].runningtime,table.Procsess[currentRunningIndex].remanningtime,table.Procsess[currentRunningIndex].wait);
+
+                    }
+                    //update the Remaining time of the currently running process with the value it has read from the shared mem
+                    PrintProcess(table.Procsess[currentRunningIndex]);
+                    
+                }
+                //if no process is currently running, go fetch the next one
+                if(table.count!=0 && runPro==0){
+                    handleNextProcess();
+                }
+            }
+             else if (AlgorithmNmber == 5){
 
                     if (table.count > 0)
                 {
@@ -591,35 +621,7 @@ int main(int argc, char *argv[])
                 }
 
                 }
-                
-                //if a new process has arrived go compare it with the currently running
-                if(table.count!=0 && runPro!=0 && hasRecivedNow){
-                    
-                    int currentRunningIndex = getProcess(pid,&table);
-                    
-                    printf("currentRunningIndex: %d\n",currentRunningIndex);
-                    PrintProcess(table.Procsess[0]);
-                    //if the remaining time of the processes currently running is larger than that of the first process in the queue (the process that mostly deserves to run in SRTN) 
-                    if(currentProcessRemTime > table.Procsess[0].remanningtime){
-                        //send stop signal to the currently running process
-                        
-                        printf("sending a stop signal \n");
-                        kill(pid,SIGSTOP);
-                        strcpy(table.Procsess[currentRunningIndex].state,stoppedState);
-                        runPro = 0;
-
-                        WritetoFile(table.Procsess[currentRunningIndex].id,table.Procsess[currentRunningIndex].state,table.Procsess[currentRunningIndex].arrivaltime,table.Procsess[currentRunningIndex].runningtime,table.Procsess[currentRunningIndex].remanningtime,table.Procsess[currentRunningIndex].wait);
-
-                    }
-                    //update the Remaining time of the currently running process with the value it has read from the shared mem
-                    PrintProcess(table.Procsess[currentRunningIndex]);
-                    
-                }
-                //if no process is currently running, go fetch the next one
-                if(table.count!=0 && runPro==0){
-                    handleNextProcess();
-                }
-            }
+           
             hasRecivedNow = false;
             //For each second, irrespectivly of which algo is currently running
             //Update the waiting time for all processes in the PCB except for the first process, which is the one that's currently resumed or unning
