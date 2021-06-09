@@ -261,6 +261,7 @@ int currentProcessRemTime;
 void sendtoprocess(int remTime);
 void handleNextProcess();
 int getRemTimeFromProcess();
+void updateWaitingTime();
 
 int main(int argc, char *argv[])
 {
@@ -530,6 +531,11 @@ int main(int argc, char *argv[])
                 }
             }
             hasRecivedNow = false;
+            //For each second, irrespectivly of which algo is currently running
+            //Update the waiting time for all processes in the PCB except for the first process, which is the one that's currently resumed or unning
+            //Thus we shouldn't count this moment as a waiting moment for the currently running process
+            //We only count this moment as a waiting moment, for waiting and stopped processes statuses
+            updateWaitingTime();
         }
 
         if(procCount==TotalProcess&& table.count==0){break;}
@@ -577,6 +583,11 @@ void handleNextProcess(){
         runPro=1;
 }
 
+void updateWaitingTime(){
+    for(int i=1;i<table.count;i++){
+        table.Procsess[i].wait++;
+    }
+}
 
 int getRemTimeFromProcess(){
 
