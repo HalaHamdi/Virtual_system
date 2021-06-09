@@ -156,29 +156,23 @@ bool tryToAllocate_BestFit(struct ProcessPCB* p){
     return p->inmemory;
 }
 void memAlg3(struct Free Pblock){
-    //Inserted the fred space after this process has finished
-        insertStart(Pblock,&F);
-        Marge(&F);
-        
-        printf("After deAllocating\n");
-        printFreeSpace(&F);
 
-        for(int i=0; i < Procsesswait.count; i++){
-            bool isAllocated = tryToAllocate_BestFit(&Procsesswait.Procsess[i]);
-            if(isAllocated){
-                struct ProcessPCB p = Procsesswait.Procsess[i];
-                //Remove that process from the Processwait PCB
-                removeByIndex(i,&Procsesswait);
-                if(AlgorithmNmber == 4){
-                    InsertSortedByRemainTime(p, &table);
-                }
-                else{
-                    Push(p,&table);
-                }
-                printf("inserted in table\n");
-                procCount++;                    
+    for(int i=0; i < Procsesswait.count; i++){
+        bool isAllocated = tryToAllocate_BestFit(&Procsesswait.Procsess[i]);
+        if(isAllocated){
+            struct ProcessPCB p = Procsesswait.Procsess[i];
+            //Remove that process from the Processwait PCB
+            removeByIndex(i,&Procsesswait);
+            if(AlgorithmNmber == 4){
+                InsertSortedByRemainTime(p, &table);
             }
+            else{
+                Push(p,&table);
+            }
+            printf("inserted in table\n");
+            procCount++;                    
         }
+    }
 
 }
 
@@ -208,9 +202,15 @@ void  dealwithFinished()
         CallGetNextFit();
 
     }else if(memAlg==3){
-        printf("Before deAllocating\n");
+
+        printf("Try to alloc best\n");
         printFreeSpace(&F);
+        
         memAlg3(Pblock);
+        
+        printf("After the trial alloc\n");
+        printFreeSpace(&F);
+        
     }
    }
     Remove(&table);
@@ -236,8 +236,9 @@ void CallGetNextFit()
                           if(Procsesswait.Procsess[0].to-Procsesswait.Procsess[0].from!=F.Mem[nextfit].space)
                           {
                               F.Mem[nextfit].from=Procsesswait.Procsess[0].to;
-                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
-                               insertSpace(F.Mem[nextfit], &F);
+                              F.Mem[nextfit].space=F.Mem[nextfit].to-F.Mem[nextfit].from;
+                               insertStart(F.Mem[nextfit], &F);
+                               Marge(&F);
 
                           }
                           Procsesswait.Procsess[0].inmemory=true;
@@ -260,6 +261,7 @@ int currentProcessRemTime;
 void sendtoprocess(int remTime);
 void handleNextProcess();
 int getRemTimeFromProcess();
+void updateWaitingTime();
 
 int main(int argc, char *argv[])
 {
@@ -433,8 +435,9 @@ int main(int argc, char *argv[])
                           if(Procsess.to-Procsess.from!=F.Mem[nextfit].space)
                           {
                               F.Mem[nextfit].from=Procsess.to;
-                              F.Mem[nextfit].space=F.Mem[nextfit].from-F.Mem[nextfit].to;
-                               insertSpace(F.Mem[nextfit], &F);
+                              F.Mem[nextfit].space=F.Mem[nextfit].to-F.Mem[nextfit].from;
+                               insertStart(F.Mem[nextfit], &F);
+                              
 
                           }
                           Procsess.inmemory=true;
@@ -528,6 +531,11 @@ int main(int argc, char *argv[])
                 }
             }
             hasRecivedNow = false;
+            //For each second, irrespectivly of which algo is currently running
+            //Update the waiting time for all processes in the PCB except for the first process, which is the one that's currently resumed or unning
+            //Thus we shouldn't count this moment as a waiting moment for the currently running process
+            //We only count this moment as a waiting moment, for waiting and stopped processes statuses
+            updateWaitingTime();
         }
 
         if(procCount==TotalProcess&& table.count==0){break;}
@@ -575,6 +583,11 @@ void handleNextProcess(){
         runPro=1;
 }
 
+void updateWaitingTime(){
+    for(int i=1;i<table.count;i++){
+        table.Procsess[i].wait++;
+    }
+}
 
 int getRemTimeFromProcess(){
 
