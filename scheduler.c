@@ -120,7 +120,7 @@ void memAlg1(){
     waitP.to=getblock.from+waitP.memsize;
     if(waitP.to-waitP.from!=getblock.space){   //we have external fragmentation need to pushed
     getblock.from=waitP.to;
-    getblock.space=waitP.to-waitP.from;
+    getblock.space=getblock.to-getblock.from;
     insertStart(getblock,&F);
      }
     waitP.inmemory=true; 
@@ -130,7 +130,7 @@ void memAlg1(){
     printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",waitP.id,waitP.from,waitP.to,waitP.memsize);
     }else{
      Push(waitP,&Procsesswait);
-     printf("still not have place for it");
+     printf("still not have place for it \n");
     }
   }
 }
@@ -146,6 +146,7 @@ bool tryToAllocate_BestFit(struct ProcessPCB* p){
             insertStart(getblock, &F);
         }
         p->inmemory=true; 
+        WritetoMEMf(p->id,"allocated",p->memsize,p->from,p->to);
         printf("Has P with id= %d lockated in memory from %d to %d with space %d \n",p->id,p->from,p->to,p->memsize);
     }
     else{
@@ -169,6 +170,7 @@ void memAlg3(struct Free Pblock){
             else{
                 Push(p,&table);
             }
+            //WritetoMEMf(Procsesswait.Procsess[0].id,"allocated",Procsesswait.Procsess[0].memsize,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to);
             printf("inserted in table\n");
             procCount++;                    
         }
