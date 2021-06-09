@@ -54,6 +54,7 @@ void down(int sem)
     }
 }
 FILE *fp;
+FILE *Perf;
 void Openfile()
 {
     fp = fopen("scheduler.log", "w");
@@ -63,12 +64,29 @@ void Closefile()
 {
     fclose(fp);
 }
-
+float totalwaiting=0;
+float totalWTA=0;
+float totalRun=0;
 void WritetoFile(int id, char *state, int arr, int total, int remaining, int wait)
 {
-    //if(strcmp(state,"finished") != 0){
-    fprintf(fp, "At time %d process %d %s arr %d total %d remain %d wait %d \n", getClk(), id, state, arr, total, remaining, wait);
-    //}
+    if(strcmp(state,"finished") == 0){
+    totalwaiting+=wait;
+    int TA=getClk()-arr;
+    float WTA=(float)TA/total;
+    totalWTA+=WTA;
+    totalRun+=total;
+    fprintf(fp, "At time %d process %d %s arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), id, state, arr, total, remaining, wait,TA,WTA);
+    }else{
+      fprintf(fp, "At time %d process %d %s arr %d total %d remain %d wait %d \n", getClk(), id, state, arr, total, remaining, wait);
+    }
+}
+void schadularfile(int numofProccess){
+    float CPU =(totalRun/getClk()) * 100;
+    Perf= fopen("scheduler.pref", "w");
+    fprintf(Perf,"CPU utilization = %.2f %% \n",CPU);
+    fprintf(Perf,"avrage AWT = %.2f \n",totalWTA/numofProccess);
+    fprintf(Perf,"avrage Waiting = %.2f \n",totalwaiting/numofProccess);
+    fclose(Perf);
 }
 
 struct processData
@@ -408,7 +426,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
-
+    schadularfile(TotalProcess);
     Closefile();
     printf("scheduler is exiting..\n");
     destroyClk(true);
