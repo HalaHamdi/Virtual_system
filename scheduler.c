@@ -169,14 +169,8 @@ void  dealwithFinished()
         CallGetNextFit();
 
     }else if(memAlg==3){
-        printf("Before deAllocating\n");
-        printFreeSpace(&F);
         
-        //Inserted the fred space after this process has finished
-        insertStart(Pblock,&F);
-        Marge(&F);
-        
-        printf("After deAllocating\n");
+        printf("Try to alloc best\n");
         printFreeSpace(&F);
 
         for(int i=0; i < Procsesswait.count; i++){
@@ -195,6 +189,8 @@ void  dealwithFinished()
                 procCount++;                    
             }
         }
+        printf("After the trial alloc\n");
+        printFreeSpace(&F);
     }
    }
     Remove(&table);
