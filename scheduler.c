@@ -202,7 +202,7 @@ void  dealwithFinished()
     if(memAlg==1){
         memAlg1();
     }else if(memAlg==2){
-        insertSpace(Pblock,&F);
+        
         CallGetNextFit();
 
     }else if(memAlg==3){
@@ -227,35 +227,46 @@ void doNotWaitForGenerator(int signum){
 }
 void CallGetNextFit()
 {
-    if(Procsesswait.count>0)
-     { int position=nextfit;
-                        nextfit=GetNextfit(Procsesswait.Procsess[0].memsize,&F,nextfit);
+
+     int position=nextfit;
+     int length=Procsesswait.count;
+     int j=0;
+     int i=0;
+     printf("hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii");
+     while(j<length )
+             {      nextfit=GetNextfit(Procsesswait.Procsess[i].memsize,&F,nextfit);
                         if(nextfit==-1)
                         {
                             nextfit=position;
+                            i++;
                         }
                         else
-                        {Procsesswait.Procsess[0].from=F.Mem[nextfit].from;
-                         {Procsesswait.Procsess[0].to=F.Mem[nextfit].from+Procsesswait.Procsess[0].memsize;
-                          if(Procsesswait.Procsess[0].to-Procsesswait.Procsess[0].from!=F.Mem[nextfit].space)
+                        { position=nextfit;
+                         
+                            Procsesswait.Procsess[i].from=F.Mem[nextfit].from;
+                         {Procsesswait.Procsess[i].to=F.Mem[nextfit].from+Procsesswait.Procsess[i].memsize;
+                          if(Procsesswait.Procsess[i].to-Procsesswait.Procsess[i].from!=F.Mem[nextfit].space)
                           {
-                              F.Mem[nextfit].from=Procsesswait.Procsess[0].to;
+                              F.Mem[nextfit].from=Procsesswait.Procsess[i].to;
                               F.Mem[nextfit].space=F.Mem[nextfit].to-F.Mem[nextfit].from;
-                               insertStart(F.Mem[nextfit], &F);
-                               Marge(&F);
+                               
+                             
 
                           }
-                          Procsesswait.Procsess[0].inmemory=true;
-                          WritetoMEMf(Procsesswait.Procsess[0].id,"allocated",Procsesswait.Procsess[0].memsize,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to);
-                          printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsesswait.Procsess[0].id,Procsesswait.Procsess[0].from,Procsesswait.Procsess[0].to,Procsesswait.Procsess[0].memsize);
-
-                          Push(Procsesswait.Procsess[0],&table);
-                          Remove(&Procsesswait);
+                          Procsesswait.Procsess[i].inmemory=true;
+                          printFreeSpace(&F);
+                          WritetoMEMf(Procsesswait.Procsess[i].id,"allocated",Procsesswait.Procsess[i].memsize,Procsesswait.Procsess[i].from,Procsesswait.Procsess[i].to);
+                          printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsesswait.Procsess[i].id,Procsesswait.Procsess[i].from,Procsesswait.Procsess[i].to,Procsesswait.Procsess[i].memsize);
+                            procCount++;
+                          Push(Procsesswait.Procsess[i],&table);
+                         removeByIndex(i,&Procsesswait);
 
 
                         }
-     }
-}
+                              }
+                              j++;
+             }
+
 }
 
  
@@ -436,15 +447,18 @@ int main(int argc, char *argv[])
                         else
                         {Procsess.from=F.Mem[nextfit].from;
                           Procsess.to=F.Mem[nextfit].from+Procsess.memsize;
+                         
                           if(Procsess.to-Procsess.from!=F.Mem[nextfit].space)
                           {
                               F.Mem[nextfit].from=Procsess.to;
                               F.Mem[nextfit].space=F.Mem[nextfit].to-F.Mem[nextfit].from;
-                               insertStart(F.Mem[nextfit], &F);
+                              
+                              
                               
 
                           }
                           Procsess.inmemory=true;
+                          printFreeSpace(&F);
                         WritetoMEMf(Procsess.id,"allocated",Procsess.memsize,Procsess.from,Procsess.to);  
                         printf("Has P with id= %d lockated in memory from %d to %d with space %d /n",Procsess.id,Procsess.from,Procsess.to,Procsess.memsize);
 
@@ -454,13 +468,17 @@ int main(int argc, char *argv[])
                     }  
 
                     if(Procsess.inmemory){
+
                     if(AlgorithmNmber == 4){
                         InsertSortedByRemainTime(Procsess, &table);
                     }
                     else{
                         Push(Procsess,&table);
+                          
+                        
                     }
-                    procCount++;
+                          
+                       procCount++;
                     }
                     else{
                       Push(Procsess,&Procsesswait);

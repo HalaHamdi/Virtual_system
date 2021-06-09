@@ -76,14 +76,13 @@ int GetNextfit(int space, struct Freeblocks *Object,int nextfit)
                return i;
            }  
     }
-    if(nextfit==Object->count)
-    {
+   
       for(int i=0;i<position;i++)
       {
           if(Object->Mem[i].space>=space)
           return i;
       }
-    }
+    
     return -1;
 
 }
