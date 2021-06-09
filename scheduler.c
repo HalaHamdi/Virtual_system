@@ -608,57 +608,57 @@ int main(int argc, char *argv[])
                     handleNextProcess();
                 }
             }
-            //  else if (AlgorithmNmber == 5){
+             else if (AlgorithmNmber == 5){
 
-            //         if (table.count > 0)
-            //     {
-            //         printf("INSIDE THE IF CONDITION IN RR TABLE.COUNT>0 ,RRStartTime %d...... \n", RRStartTime);
-            //         if (!RRStarted) // no process in progress
-            //         {
-            //             printf("INSIDE THE RRSTARTTED CONDITION IN RR ......... \n");
-            //             RRStarted = true;
-            //             printf("RRStarted \n");
-            //             sendtoprocess(table.Procsess[RRPointer].runningtime);
-            //             RRforkProcess();
-            //             RRStartTime = getClk();
-            //         }
-            //         else
-            //         {
+                    if (table.count > 0)
+                {
+                    printf("INSIDE THE IF CONDITION IN RR TABLE.COUNT>0 ,RRStartTime %d...... \n", RRStartTime);
+                    if (!RRStarted) // no process in progress
+                    {
+                        printf("INSIDE THE RRSTARTTED CONDITION IN RR ......... \n");
+                        RRStarted = true;
+                        printf("RRStarted \n");
+                        sendtoprocess(table.Procsess[RRPointer].runningtime);
+                        RRforkProcess();
+                        RRStartTime = getClk();
+                    }
+                    else
+                    {
 
-            //             int remainingTime = getRemTimeFromProcess();
+                        int remainingTime = getRemTimeFromProcess();
 
-            //             if (remainingTime == 0)
-            //             {
-            //                 printf("INSIDE THE REMAINING TIME =0 IN RR .............. \n");
-            //                 RRFinishProcess();
-            //                 //deleted process was the last one in array
-            //                 if (RRPointer == table.count)
-            //                 {
-            //                     RRPointer = 0;
-            //                 }
-            //                 //otherwise donot update the pointer because after a process
-            //                 //terminates , the next process has been shifted to the terminated
-            //                 //process's position.
-            //                 if (table.count != 0)
-            //                 {
-            //                     RRStartORContinue();
-            //                 }
-            //                 RRStartTime = getClk();
+                        if (remainingTime == 0)
+                        {
+                            printf("INSIDE THE REMAINING TIME =0 IN RR .............. \n");
+                            RRFinishProcess();
+                            //deleted process was the last one in array
+                            if (RRPointer == table.count)
+                            {
+                                RRPointer = 0;
+                            }
+                            //otherwise donot update the pointer because after a process
+                            //terminates , the next process has been shifted to the terminated
+                            //process's position.
+                            if (table.count != 0)
+                            {
+                                RRStartORContinue();
+                            }
+                            RRStartTime = getClk();
 
-            //             } //quatum part has ended for a process
-            //             else if ((getClk() - RRStartTime) == quantum)
-            //             {
-            //                 printf("INSIDE CLK-TIME=QUANTUM................... clk=%d ,RRStart= %d \n", getClk(), RRStartTime);
-            //                 RRstopProcess(remainingTime);
-            //                 RRPointer = (RRPointer + 1) % table.count;
-            //                 printf("NOW RRPOINTER AFTER UPATE = %d \n", RRPointer);
-            //                 RRStartORContinue();
-            //                 RRStartTime = getClk();
-            //             }
-            //         }
-            //     }
+                        } //quatum part has ended for a process
+                        else if ((getClk() - RRStartTime) == quantum)
+                        {
+                            printf("INSIDE CLK-TIME=QUANTUM................... clk=%d ,RRStart= %d \n", getClk(), RRStartTime);
+                            RRstopProcess(remainingTime);
+                            RRPointer = (RRPointer + 1) % table.count;
+                            printf("NOW RRPOINTER AFTER UPATE = %d \n", RRPointer);
+                            RRStartORContinue();
+                            RRStartTime = getClk();
+                        }
+                    }
+                }
 
-            //     }
+                }
            
             hasRecivedNow = false;
             //For each second, irrespectivly of which algo is currently running
