@@ -356,6 +356,7 @@ int main(int argc, char *argv[])
                             printf("INSIDE CLK-TIME=QUANTUM................... clk=%d ,RRStart= %d \n",getClk(),RRStartTime);  
                             RRstopProcess(remainingTime);
                             RRPointer=(RRPointer+1)%table.count;
+                            printf("NOW RRPOINTER AFTER UPATE = %d \n",RRPointer);
                             RRStartORContinue();
                             RRStartTime=getClk();
 
@@ -775,17 +776,13 @@ void RRStartORContinue(){
 if (table.Procsess[RRPointer].pid == -1) {
     sendtoprocess(table.Procsess[RRPointer].runningtime);
     RRforkProcess();
-    printf("process with id =%d forked \n",table.Procsess[RRPointer].id);
-    char started[]="started";
-    strcpy(table.Procsess[RRPointer].state,started);
-    WritetoFile(table.Procsess[RRPointer].id,table.Procsess[RRPointer].state,table.Procsess[RRPointer].arrivaltime,table.Procsess[RRPointer].runningtime,table.Procsess[RRPointer].remanningtime,table.Procsess[RRPointer].wait);
 }
 else{
     printf("process with id =%d continued \n",table.Procsess[RRPointer].id);
     kill(table.Procsess[RRPointer].pid, SIGCONT);
     char resumed[]="resumed";
     strcpy(table.Procsess[RRPointer].state,resumed);
-   WritetoFile(table.Procsess[RRPointer].id,table.Procsess[RRPointer].state,table.Procsess[RRPointer].arrivaltime,table.Procsess[RRPointer].runningtime,table.Procsess[RRPointer].remanningtime,table.Procsess[RRPointer].wait);
+    WritetoFile(table.Procsess[RRPointer].id,table.Procsess[RRPointer].state,table.Procsess[RRPointer].arrivaltime,table.Procsess[RRPointer].runningtime,table.Procsess[RRPointer].remanningtime,table.Procsess[RRPointer].wait);
 }
 }
 void RRFinishProcess(){
@@ -802,12 +799,15 @@ void RRstopProcess(int remaining){
     table.Procsess[RRPointer].remanningtime=remaining;
 
     printf("Sched: stopped Process with id = %d and pid  = %d  with remainingTime =%d with RRPOINTER = %d \n",table.Procsess[RRPointer].id,table.Procsess[RRPointer].pid,table.Procsess[RRPointer].remanningtime,RRPointer);
-    if(table.Procsess[RRPointer].remanningtime==0){ //not sure if it is necessary
-        RRFinishProcess();
-    }
-    else{ kill(table.Procsess[RRPointer].pid, SIGSTOP);
+    // if(table.Procsess[RRPointer].remanningtime==0){ //not sure if it is necessary
+    //     RRFinishProcess();
+    // }
+    // else{ 
+    kill(table.Procsess[RRPointer].pid, SIGSTOP);
     printf("IN THE KILLL PROCESSSSSSSSSSSSSS  at time = %d  \n ",getClk());
-   char stopped[]="stopped";
+    char stopped[]="stopped";
    strcpy(table.Procsess[RRPointer].state,stopped);
    WritetoFile(table.Procsess[RRPointer].id,table.Procsess[RRPointer].state,table.Procsess[RRPointer].arrivaltime,table.Procsess[RRPointer].runningtime,table.Procsess[RRPointer].remanningtime,table.Procsess[RRPointer].wait);
-}}
+
+//}
+}
