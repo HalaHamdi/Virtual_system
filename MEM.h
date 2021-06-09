@@ -16,10 +16,10 @@ struct Freeblocks
    struct Free Mem[MAX_SIZE_MEM];
    int count;
 };
-struct BuddyFreeBlocks
-{
-    struct Freeblocks blocks[10];
-};
+// struct BuddyFreeBlocks
+// {
+//     struct Freeblocks blocks[10];
+// };
 
 void printOneSpace(struct Free block){
     printf("from %d To %d a space of %d\n",block.from,block.to,block.space);
