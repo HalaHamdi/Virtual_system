@@ -62,6 +62,7 @@ void down(int sem)
 }
 FILE * fp;
 FILE * MEMf;
+FILE *Perf;
 void Openfile(){
    fp = fopen ("scheduler.log","w");
    fprintf (fp, "#At time x process y state arr w total z remaing y wait k \n");
@@ -69,10 +70,29 @@ void Openfile(){
 void Closefile(){
 fclose (fp);
 }
-void WritetoFile(int id,char *state,int arr,int total,int remaining,int wait){
-   
-        fprintf(fp,"At time %d process %d %s arr %d total %d remain %d wait %d \n",getClk(),id,state,arr,total,remaining,wait);
-    
+float totalwaiting=0;
+float totalWTA=0;
+float totalRun=0;
+void WritetoFile(int id, char *state, int arr, int total, int remaining, int wait)
+{
+    if(strcmp(state,"finished") == 0){
+    totalwaiting+=wait;
+    int TA=getClk()-arr;
+    float WTA=(float)TA/total;
+    totalWTA+=WTA;
+    totalRun+=total;
+    fprintf(fp, "At time %d process %d %s arr %d total %d remain %d wait %d TA %d WTA %.2f \n", getClk(), id, state, arr, total, remaining, wait,TA,WTA);
+    }else{
+      fprintf(fp, "At time %d process %d %s arr %d total %d remain %d wait %d \n", getClk(), id, state, arr, total, remaining, wait);
+    }
+}
+void schadularfile(int numofProccess){
+    float CPU =(totalRun/getClk()) * 100;
+    Perf= fopen("scheduler.pref", "w");
+    fprintf(Perf,"CPU utilization = %.2f %% \n",CPU);
+    fprintf(Perf,"avrage WTA = %.2f \n",totalWTA/numofProccess);
+    fprintf(Perf,"avrage Waiting = %.2f \n",totalwaiting/numofProccess);
+    fclose(Perf);
 }
 
 void OpenMEMf(){
@@ -548,6 +568,7 @@ int main(int argc, char *argv[])
 
     Closefile();
     CloseMEMf();
+    schadularfile(TotalProcess);
     printf("scheduler is exiting..\n");
     destroyClk(true);
 }
